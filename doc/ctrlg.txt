@@ -7,14 +7,11 @@ USAGE                                                              *ctrlg.vim*
 
 It remaps <C-G> in normal mode, replacing |CTRL-G|.
 
-You can add support to your language by creating a dictionary:
+You can add support to your language by creating a variable:
 >
-  let g:ctrlg_langs = {'XX': ['Modified', 'lines', 'Not a file.', '[No Name]']}
+  let g:ctrlg_lang = ['Modified', 'lines', 'Not a file.', '[No Name]']
 <
-Where `XX` are the first two characters of the `$LANG` environmental variable,
 and you should translate those strings into your own language.
-
-If the `$LANG` variable doesn't exist, you must create it as well.
 
 
 ==============================================================================

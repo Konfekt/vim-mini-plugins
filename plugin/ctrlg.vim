@@ -70,10 +70,10 @@ fun! CtrlG()
 endfun
 
 
-let s:langs = extend({
+let s:langs = {
       \ 'en': ['Modified',   'lines', 'Not a file.', '[No Name]'],
       \ 'it': ['Modificato', 'righe', 'File inesistente', '[Senza nome]']
-      \}, get(g:, 'ctrlg_langs', {}))
+      \}
 
 let s:tr_dict = {
       \ 'modified': 0,
@@ -84,6 +84,9 @@ let s:tr_dict = {
 
 fun! s:tr(string)
   try
+    if exists('g:ctrlg_lang')
+      return g:ctrlg_lang[s:tr_dict[a:string]]
+    endif
     let lang = exists("$LANG") ? tolower($LANG[:1]) : 'en'
     if !has_key(s:langs, lang)
       let lang = 'en'
