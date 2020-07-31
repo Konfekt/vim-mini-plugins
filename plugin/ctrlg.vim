@@ -17,11 +17,6 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let s:win  = has("win32") || has("win64") || has("win16")
-let s:lang = exists("$LANG") ? tolower($LANG[:1]) : 'en'
-
-if index(['it'], s:lang) < 0
-  let s:lang = 'en'
-endif
 "}}}
 
 "------------------------------------------------------------------------------
@@ -38,12 +33,12 @@ fun! CtrlG()
   let perc = string(float2nr(l)) . "%"
 
   let buf = "Buf ".bufnr('')
-  let file = expand("%")
-  let mod = !&modified? '' : printf('[%s] ', s:tr('Modified'))
+  let file = expand("%") == '' ? s:tr('unnamed') : expand('%')
+  let mod = !&modified? '' : printf('[%s] ', s:tr('modified'))
   let lines = printf('%s / %s %s', line('.'), line('$'), s:tr('lines'))
 
   if !filereadable(file)
-    let info = "        " . s:tr("Not a file.")
+    let info = "        " . s:tr("nofile")
     let warn = 1
   else
     let info = s:win ? '' : substitute(system('ls -l "'.file.'"'), '\('.file.'\)\?\n', '', '')
@@ -74,16 +69,29 @@ fun! CtrlG()
   echohl None
 endfun
 
+
+let s:langs = extend({
+      \ 'en': ['Modified',   'lines', 'Not a file.', '[No Name]'],
+      \ 'it': ['Modificato', 'righe', 'File inesistente', '[Senza nome]']
+      \}, get(g:, 'ctrlg_langs', {}))
+
+let s:tr_dict = {
+      \ 'modified': 0,
+      \ 'lines': 1,
+      \ 'nofile': 2,
+      \ 'unnamed': 3
+      \}
+
 fun! s:tr(string)
-  if s:lang == 'en'
-    return a:string
-  else
-    return {
-          \ 'Modified':    {'it': 'Modificato'        },
-          \ 'lines':       {'it': 'righe'             },
-          \ 'Not a file.': {'it': 'File inesistente.' },
-          \}[a:string][s:lang]
-  endif
+  try
+    let lang = exists("$LANG") ? tolower($LANG[:1]) : 'en'
+    if !has_key(s:langs, lang)
+      let lang = 'en'
+    endif
+    return s:langs[lang][s:tr_dict[a:string]]
+  catch
+    return s:langs['en'][s:tr_dict[a:string]]
+  endtry
 endfun
 
 "--------------------------------------------------------------------------{{{1
