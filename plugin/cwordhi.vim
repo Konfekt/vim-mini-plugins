@@ -60,14 +60,17 @@ fun! s:cword_hi()
   endif
   let word = escape(expand('<cword>'), '\')
   if word =~ '\k' && matchstr(getline('.'), '\%' . col('.') . 'c.') =~ '\k'
-    let c = col('.') . 'c\C\<' . word . '\>'
-    let l = line('.') . 'l\C\<' . word . '\>'
-    let w = max([0, col('.') - strlen(expand('<cword>'))])
+    let word = '\C\<' . word . '\>'
+    " restrict pattern matching to top and bottom visible lines
+    let below = '\%>' . line('.') . 'l\%<' . line('w$') . 'l'
+    let above = '\%<' . line('.') . 'l\%>' . line('w0') . 'l'
+    let right = '\%>' . col('.') . 'c'
+    let left  = '\%<' . max([0, col('.') - strlen(expand('<cword>'))]) . 'c'
     let h = get(g:, 'cwordhi', 'VisualNOS')
-    let w:illuminated_words_below = matchadd(h, '\V\%>' . l)
-    let w:illuminated_words_above = matchadd(h, '\V\%<' . l)
-    let w:illuminated_words_right = matchadd(h, '\V\%>' . c)
-    let w:illuminated_words_left  = matchadd(h, '\V\%<' . w . 'c\C\<' . word . '\>')
+    let w:illuminated_words_below = matchadd(h, '\V' . below . word)
+    let w:illuminated_words_above = matchadd(h, '\V' . above . word)
+    let w:illuminated_words_right = matchadd(h, '\V' . right . word)
+    let w:illuminated_words_left  = matchadd(h, '\V' . left . word)
   endif
 endfun "}}}
 
