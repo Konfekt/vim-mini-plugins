@@ -1,0 +1,52 @@
+*web.txt* web
+
+
+INTRODUCTION                                                         *web.vim*
+==============================================================================
+
+  This plugin provides several commands and mappings to interact with the web
+  browser.
+
+
+
+COMMANDS                                                        *web-commands*
+==============================================================================
+
+  *:Url*             open url in default browser
+  *:Google*          search a string or visual selection on Google
+  *:StackOverFlow*   ,, ,, ,, ,,  on StackOverflow
+  *:Translate*       translate a string or visual selection with Google
+
+
+MAPPINGS                                                        *web-mappings*
+==============================================================================
+
+  Mappings are enabled by default, you can disable them with:
+>
+    let g:web_mappings = 0
+<
+  Default mappings:
+
+    `gou`   :Url <cword> | {visual-selection}
+    `gog`   :Google <cword> | {visual-selection}
+    `gos`   :StackOverFlow <cword> | {visual-selection}
+
+
+
+PLUGS                                                              *web-plugs*
+==============================================================================
+
+  Plugs are disabled by default, you can enable them with:
+>
+    let g:web_plugs = 1
+<
+  Plugs (valid for normal and visual mode):
+
+    <Plug>(WebUrl)              :Url <cword> | {visual-selection}
+    <Plug>(WebGoogle)           :Google <cword> | {visual-selection}
+    <Plug>(WebStackOverFlow)    :StackOverFlow <cword> | {visual-selection}
+
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:

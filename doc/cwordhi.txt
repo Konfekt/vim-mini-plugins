@@ -1,0 +1,26 @@
+*cwordhi.txt* cwordhi
+
+
+USAGE                                                            *cwordhi.vim*
+==============================================================================
+
+  *:CwordHiToggle*
+
+Enable or disable the highlighting of other occurrances in the buffer of the
+word under cursor.
+
+
+
+SETTINGS                                                    *cwordhi-settings*
+==============================================================================
+
+                                                           *g:cwordhi_enabled*
+If the functionality is enabled at startup. Default 0.
+
+                                                                   *g:cwordhi*
+The highlight group used. Default is |VisualNOS|.
+
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:

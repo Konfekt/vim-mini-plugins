@@ -1,0 +1,29 @@
+*mru.txt* mru
+
+
+INTRODUCTION                                                         *mru.vim*
+==============================================================================
+
+Plugin to browse recently accessed files with `fzf`. It is based on the
+similar plugin by Yegappan Lakshmanan.
+
+
+
+COMMANDS                                                        *mru-commands*
+==============================================================================
+                                                                        *:Mru*
+  Type `:Mru` to start the command.
+                                                                    *:MruLock*
+  Type `:MruLock` to toggle the tracking of files.
+
+
+
+CREDITS                                                          *mru-credits*
+==============================================================================
+
+Bram Moolenar for Vim
+Yegappan Lakshmanan for |mru.vim|              https://github.com/yegappan/mru
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:

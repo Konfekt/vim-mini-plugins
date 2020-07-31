@@ -1,0 +1,124 @@
+*mini-plugins.txt* mini-plugins
+
+
+INTRODUCTION                                                    *mini-plugins*
+==============================================================================
+
+This is a collection of small plugins that I made to take care of simple
+tasks. They're small and I don't want to create individual repos for them.
+Each of them resides in a single file, they're not |autoload|ed on purpose, so
+that if you want you can just take the ones you like and put them in
+a directory in your |runtimepath|, such as
+>
+    ~/.vim/pack/basic/start/vim-mini-plugins/plugin
+<
+or
+>
+    ~/.vim/plugin
+<
+or
+>
+    ~/.vim/after/plugin
+<
+etc.
+
+With the same mindset, the plugins have very little configuration options (or
+none at all). A big plus for me.
+
+
+
+
+USAGE                                                     *mini-plugins-usage*
+==============================================================================
+
+`Caveat`: since I consider them as an extension to my default vimrc, mappings
+are enabled by default, and reflect my personal preferences. You can still
+disable them with a setting and use the plugs, if you don't like them. Or you
+can modify the source and set them from there. I don't think these plugins
+will need major updates.
+
+You can disable the ones you don't want to load by adding
+>
+    let g:loaded_{PLUGIN_NAME} = 1
+<
+
+
+
+
+PLUGINS LIST                                               *mini-plugins-list*
+==============================================================================
+
+Here follows a short description of each of them and the link to their |help|
+file:
+
+
+|buffer_history.vim|
+
+  Maintain a buffer history per window, based on the `vim-buffer-history`
+  plugin by Dhruva Sagar. It supports popup window in both vim and nvim.
+
+                             https://github.com/dhruvasagar/vim-buffer-history
+
+
+|marksigns.vim|
+
+  An uncomplicated alternative to `vim-signature`. It only handles lowercase
+  and uppercase marks, but it's bug-free as far as I can see. It won't mess
+  with `viminfo/shada` files and is optimized with timers.
+
+                                      https://github.com/kshenoy/vim-signature
+
+
+|ctrlg.vim|
+
+  A better looking and more informative replacement for the built-in |CTRL-G|
+  mapping.
+
+
+|cwordhi.vim|
+
+  Underline the other occurrences of the word under cursor.
+
+
+|tree.vim|
+
+  A wrapper for the `tree` executable that works as file browser that shows
+  the directories structure. I don't use it that much but it's cool to have
+  sometimes. Generally working on UNIX-like systems only.
+
+
+|noinchlsearch.vim|
+
+  Disable new vim/nvim automatic |hlsearch| on all matches. It is a relatively
+  new vim feature that I don't like and it's impossible to get the old
+  behaviour otherwise. In vim (but currently not in nvim), by default it still
+  works for `ex` commands (only `/?` searches are disabled).
+  You can also toggle it with a mapping inside the command line.
+
+
+|mru.vim|
+
+  Browse recently accessed files with |fzf|. It is based on the similar plugin
+  by Yegappan Lakshmanan.
+                                               https://github.com/yegappan/mru
+
+
+|conceal.vim|
+
+  Make invisible some pattern in the buffer.
+
+
+|web.vim|
+
+  Commands to open urls and search/translate stuff on the web.
+
+
+|move_by_indent.vim|
+
+  Mappings to move by indent level.
+
+
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:

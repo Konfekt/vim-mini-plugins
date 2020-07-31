@@ -1,0 +1,80 @@
+*buffer_history.txt* buffer_history
+
+
+INTRODUCTION                                              *buffer_history.vim*
+==============================================================================
+
+  Vim plugin to maintain a buffer history per window, based on the
+  `vim-buffer-history` plugin by Dhruva Sagar.
+
+  It supports popup window feature in both vim and nvim.
+
+
+
+MAPPINGS                                             *buffer_history-mappings*
+==============================================================================
+
+  Disable default mappings with:
+>
+    let g:buffer_history_mappings = 0
+<
+  `[w`     same as BufferHistoryBack [count]
+  `]w`     same as BufferHistoryForward [count]
+  `[W`     same as BufferHistoryFirst
+  `]W`     same as BufferHistoryLast
+  `-w`     same as BufferHistoryRemove
+
+
+
+PLUGS                                                   *buffer_history-plugs*
+==============================================================================
+
+  Enable plugs with:
+>
+    let g:buffer_history_plugs = 1
+<
+  <Plug>(BufferHistoryBack)         same as BufferHistoryBack [count]
+  <Plug>(BufferHistoryForward)      same as BufferHistoryForward [count]
+
+
+
+COMMANDS                                             *buffer_history-commands*
+==============================================================================
+
+*:BufferHistoryFirst*        go to first buffer in history
+*:BufferHistoryLast*         go to last buffer in history
+*:BufferHistoryBack*         go to [count] previous buffer in history
+*:BufferHistoryForward*      go to [count] next buffer in history
+*:BufferHistoryRemove*       remove current buffer from history
+*:BufferHistoryTruncate*     truncate history from the current entry forwards
+*:BufferHistoryList*         show buffer history in the command line
+
+
+
+
+SETTINGS                                             *buffer_history-settings*
+==============================================================================
+
+                                              *g:buffer_history_list_in_popup*
+
+  Use the popup also for |:BufferHistoryList|. Default is 0.
+
+                                                 *g:buffer_history_short_dirs*
+
+  Shorten (-N) parent directories. Default is 2.
+
+
+
+
+
+
+CREDITS                                               *buffer_history-credits*
+==============================================================================
+
+Bram Moolenar for Vim
+Dhruva Sagar                 https://github.com/dhruvasagar/vim-buffer-history
+
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:

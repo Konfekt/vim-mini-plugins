@@ -1,0 +1,70 @@
+*move_by_indent.txt* move_by_indent
+
+
+INTRODUCTION                                              *move_by_indent.vim*
+==============================================================================
+
+  With this plugin you can move vertically in the buffer, to places with the
+  same indent level of the starting position. You can also move to deeper of
+  shallower indent levels.
+
+
+
+
+MAPPINGS                                             *move_by_indent-mappings*
+==============================================================================
+
+  Mappings can be disabled by setting:
+>
+    let g:move_by_indent_mappings = 0
+<
+  In this case you should enable |move_by_indent-plugs| and map them.
+
+  Default mappings are (same for normal and visual mode):
+
+    `[<`  move backwards by same indent
+    `]<`  move forwards by same indent
+
+    `[>`  move back to lesser indent
+    `]>`  move forward to deeper indent
+
+    `[;`  move back to deeper indent
+    `];`  move forward to deeper indent
+
+    `[,`  move back to lesser indent
+    `],`  move forward to lesser indent
+
+
+
+
+PLUGS                                                   *move_by_indent-plugs*
+==============================================================================
+
+  To enable <Plug>s (disabled by default):
+>
+    let g:move_by_indent_plugs = 1
+<
+
+  <Plug>(MoveBySameIndentBwd)     move backwards by same indent
+  <Plug>(MoveBySameIndentFwd)     move forwards by same indent
+
+  <Plug>(MoveByDeeperIndentBwd)   move back to deeper indent
+  <Plug>(MoveByDeeperIndentFwd)   move forward to deeper indent
+
+  <Plug>(MoveByLesserIndentBwd)   move back to lesser indent
+  <Plug>(MoveByLesserIndentFwd)   move forward to lesser indent
+
+
+
+
+CREDITS                                               *move_by_indent-credits*
+==============================================================================
+
+Bram Moolenar for Vim
+Vim Tips website
+
+https://vim.fandom.com/wiki/Move_to_next/previous_line_with_same_indentation
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:

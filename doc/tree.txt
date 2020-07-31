@@ -1,0 +1,69 @@
+*tree.txt* tree
+
+
+INTRODUCTION                                                        *tree.vim*
+==============================================================================
+
+  It's a wrapper for the `tree` executable that works as file browser that
+  shows the directories structure. Mostly working on UNIX-like systems only.
+
+
+
+
+COMMANDS                                                       *tree-commands*
+==============================================================================
+
+    Tree [args]~
+
+  *:Tree*     start in the current window
+  *:VTree*    start in a vertical split
+  *:STree*    start in an horizontal split
+
+  All commands accept the same kind of arguments that the `tree` command
+  accepts. See `man tree` in the shell.
+
+
+
+MAPPINGS                                                       *tree-mappings*
+==============================================================================
+
+  Mappings can be disabled by setting:
+>
+    let g:tree_mappings = 0
+<
+  Default mappings:
+
+    `-+`    :Tree
+    `-V`    :VTree
+    `-S`    :STree
+
+
+
+
+SETTINGS                                                       *tree-settings*
+==============================================================================
+
+  Default: ''                                         *g:tree_default_options*
+
+    The switches to be passed to the `tree` command by default.
+
+
+  Default: 2                                            *g:tree_default_depth*
+
+    This option is the same of the `-L` switch of the `tree` command.
+
+
+  Default: 1                                      *g:tree_syntax_highlighting*
+
+    Set to 0 to disable syntax highlighting in the tree buffer.
+
+
+
+LICENSE                                                         *tree-license*
+==============================================================================
+
+MIT license
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:

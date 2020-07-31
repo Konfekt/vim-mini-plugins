@@ -1,0 +1,17 @@
+*conceal.txt* conceal
+
+
+Vim plugin to hide a pattern from the buffer.
+
+
+COMMANDS                                                         *conceal.vim*
+==============================================================================
+
+  *:Conceal* [!] [pattern]
+
+Hide the given [pattern]. With <bang>, clear specific patterns, or all
+patterns if none given.
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:

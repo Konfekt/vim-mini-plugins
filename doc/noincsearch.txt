@@ -1,0 +1,48 @@
+*noincsearch.txt* noincsearch
+
+
+INTRODUCTION                                                 *noincsearch.vim*
+==============================================================================
+
+Vim patch 8.0.1238 made it so, that while searching with / or ?, all matches
+are highlighted with hlsearch, not only the one with 'incsearch'. Also neovim
+is affected by this patch. I liked better the normal 'incsearch', personally.
+
+This plugin can revert this change, but since I find this feature useful at
+least in the |:| |cmdline|, it is configurable in this sense. In neovim this
+isn't possible, though.
+
+
+
+
+USAGE                                                      *noincsearch-usage*
+==============================================================================
+
+The plugin is enabled by default. Inside the command line, you can toggle the
+highlight wit <C-S>, unless that key was already mapped (with |:cmap|).
+
+You can change the key by mapping the <Plug>CmdlineHlsearch.
+
+
+
+
+SETTINGS                                                *noincsearch-settings*
+==============================================================================
+
+Default: '/,\?'                                     *g:noinchlsearch_cmdlines*
+
+A pattern with comma-separated |cmdline| types.
+
+By default, highlight is disabled in the |/| and |?| command lines.
+In vim (but not in neovim, at least currently) it will still work in the |:|
+command line.
+
+If you want to disable also for |:|, do:
+>
+  let g:noinchlsearch_cmdlines = '/,\?,:'
+<
+
+
+
+==============================================================================
+vim:tw=78:ft=help:norl:et:fen:fdl=0:
