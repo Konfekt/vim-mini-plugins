@@ -151,7 +151,7 @@ fun! s:Tree.syntax() abort
 endfun
 
 
-fun! s:Tree.action_on_line(with_tree) abort
+fun! s:Tree.action_on_line(with_tree, cmd) abort
   " Perform an action on the item at current line.
   if line('.') == 1 && a:with_tree
     return
@@ -171,20 +171,21 @@ fun! s:Tree.action_on_line(with_tree) abort
     call self.history.add(self.dir)
     call self.refresh()
 
-    " open directory in normal explorer
+  " open directory in normal explorer
   elseif isdirectory(item)
+    " don't the tree buffer becomes the alternate file in this case
     silent 0file
-    exe "Explore" s:fnameescape(item)
+    exe a:cmd s:fnameescape(item)
 
-    " not possible to descend into a file...
+  " not possible to descend into a file...
   elseif a:with_tree
     echo "[Tree] Not a directory"
 
-    " open the file in current window
+  " open the file in current window
   elseif filereadable(item)
-    exe "e" s:fnameescape(item)
+    exe a:cmd s:fnameescape(item)
 
-    " something went wrong
+  " something went wrong
   else
     echo "[Tree] Invalid item"
   endif
@@ -223,7 +224,8 @@ fun! s:Tree.quit() abort
   if self.cmd == 'enew' && (buflisted(bufnr('#')) || altfile)
     buffer #
   elseif self.cmd == 'enew'
-    bnext
+    " there could be no other buffers
+    try | bnext | catch | quit | endtry
   else
     quit
   endif
@@ -350,14 +352,18 @@ fun! s:maps() abort
   nnoremap <silent><buffer><nowait> k       :<c-u>exe 'normal!' v:count1.'k0'<cr>:call search('\w', 'W', line('.'))<cr>
   nnoremap <silent><buffer><nowait> J       :call b:Tree.move(0, 1, 1)<cr>
   nnoremap <silent><buffer><nowait> K       :call b:Tree.move(1, 1, 1)<cr>
-  nnoremap <silent><buffer><nowait> <CR>    :call b:Tree.action_on_line(0)<cr>
+
+  nnoremap <silent><buffer><nowait> <CR>    :<C-u>call b:Tree.action_on_line(0, 'edit')<cr>
+  nnoremap <silent><buffer><nowait> v       :<C-u>call b:Tree.action_on_line(0, 'vsplit')<cr>
+  nnoremap <silent><buffer><nowait> s       :<C-u>call b:Tree.action_on_line(0, 'split')<cr>
+  nnoremap <silent><buffer><nowait> t       :<C-u>call b:Tree.action_on_line(0, 'tabedit')<cr>
 
   nnoremap <silent><buffer><nowait> <F1>    :call <sid>help()<cr>
   nnoremap <silent><buffer><nowait> <F2>    :call b:Tree.history.go(1)<cr>
   nnoremap <silent><buffer><nowait> <F3>    :call b:Tree.history.go(0)<cr>
 
   nnoremap <silent><buffer><nowait> -       :call b:Tree.go_up()<cr>
-  nnoremap <silent><buffer><nowait> o       :call b:Tree.action_on_line(1)<cr>
+  nnoremap <silent><buffer><nowait> o       :call b:Tree.action_on_line(1, '')<cr>
   nnoremap         <buffer><nowait> .       :! <C-r>=<sid>item_at_line()<cr><Home><Right>
   nnoremap <silent><buffer><nowait> gh      :call b:Tree.toggle_option('a', 'hidden elements')<cr>
   nnoremap <silent><buffer><nowait> gd      :call b:Tree.toggle_option('d', 'directories only')<cr>
@@ -382,7 +388,10 @@ fun! s:help()
   echo ".         populate command line with path"
   echo "-         go to parent directory"
   echo "o         descend into directory"
-  echo "CR        enter directory/file"
+  echo "<CR>      open directory/file"
+  echo "s         open directory/file in a horizontal split"
+  echo "v         open directory/file in a vertical split"
+  echo "t         open directory/file in a new tab"
   echo "gd        toggle -d switch (directories only)"
   echo "gh        toggle -h switch (hidden elements)"
   echo "gr        refresh"
