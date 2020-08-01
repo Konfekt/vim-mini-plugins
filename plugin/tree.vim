@@ -197,6 +197,7 @@ fun! s:Tree.open(cmd, item)
     wincmd l
     exe 'edit' s:fnameescape(a:item)
     wincmd p
+    call search(s:item_pat, 'W', line('.'))
   else
     exe a:cmd s:fnameescape(a:item)
   endif

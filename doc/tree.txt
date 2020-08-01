@@ -66,11 +66,14 @@ PROJECT DRAWER MODE                                        *tree-project-mode*
 ==============================================================================
 
   If started with the |:PTree| command, |tree| will run in project drawer
-  mode, that is, the |tree| window will be placed on the left.
+  mode, that is, the |tree| window will be placed on the left, with a fixed
+  50-columns width.
 
   In this mode, selecting an item with <CR>, instead of opening the file in
   the same window as usual, will open it in the next window, then the cursor
   will be brought back to the |tree| window.
+
+  Other ways of opening files/directories are not affected.
 
 
 
