@@ -202,6 +202,14 @@ fun! s:Tree.open(cmd, item)
   endif
 endfun
 
+
+fun! s:Tree.item_in_quotes() abort
+  " Item at line, in quotes.
+  return has('win32') ? '"' . s:item_at_line() . '"'
+        \             : '"' . escape(s:item_at_line(), '"') . '"'
+endfun
+
+
 fun! s:Tree.go_up()
   " Go to the parent directory.
   let self.dir = fnamemodify(self.dir, ':p:h:h')
@@ -301,9 +309,11 @@ endfun
 
 fun! s:Tree.refresh()
   " Refresh Tree buffer.
+  let pos = getcurpos()
   setlocal ma
   %d _
   call self.fill()
+  silent! call cursor(pos[1:2])
 endfun
 
 
@@ -384,7 +394,7 @@ fun! s:maps() abort
 
   nnoremap <silent><buffer><nowait> -       :call b:Tree.go_up()<cr>
   nnoremap <silent><buffer><nowait> o       :call b:Tree.action_on_line(1, '')<cr>
-  nnoremap         <buffer><nowait> .       :! <C-r>=<sid>item_at_line()<cr><Home><Right>
+  nnoremap         <buffer><nowait> .       :! <C-r>=b:Tree.item_in_quotes()<cr><Home><Right>
   nnoremap <silent><buffer><nowait> gh      :call b:Tree.toggle_option('a', 'hidden elements')<cr>
   nnoremap <silent><buffer><nowait> gd      :call b:Tree.toggle_option('d', 'directories only')<cr>
   nnoremap <silent><buffer><nowait> gr      :call b:Tree.refresh()<cr>
@@ -406,21 +416,21 @@ fun! s:help()
   echo "f         move to next file"
   echo "D         move to previous directory"
   echo "F         move to previous file"
-  echo "<F1>      this help"
-  echo "<F2>      history backward"
-  echo "<F3>      history forward"
-  echo ".         populate command line with path"
   echo "-         go to parent directory"
   echo "o         descend into directory"
   echo "<CR>      open directory/file"
   echo "s         open directory/file in a horizontal split"
   echo "v         open directory/file in a vertical split"
   echo "t         open directory/file in a new tab"
+  echo ".         populate command line with path"
   echo "gd        toggle -d switch (directories only)"
   echo "gh        toggle -h switch (hidden elements)"
   echo "gr        refresh"
   echo "g+        increase depth (-L switch)"
   echo "g-        decrease depth ,,"
+  echo "<F1>      this help"
+  echo "<F2>      history backward"
+  echo "<F3>      history forward"
   call getchar()
   redraw
 endfun
