@@ -31,11 +31,13 @@ set cpo&vim
 command! -nargs=* -complete=dir Tree call tree#show('enew', <q-args>)
 command! -nargs=* -complete=dir VTree call tree#show('vnew', <q-args>)
 command! -nargs=* -complete=dir STree call tree#show('new', <q-args>)
+command! -nargs=* -complete=dir PTree call tree#show('project', <q-args>)
 
 if get(g:, 'tree_mappings', 1)
   nnoremap -+ :Tree<cr>
   nnoremap -V :VTree<cr>
   nnoremap -S :STree<cr>
+  nnoremap -P :PTree<cr>
 endif
 
 
@@ -81,7 +83,8 @@ fun! tree#show(cmd, args) abort
   endif
 
   let is_explorer = index(['netrw', 'dirvish'], &ft) >= 0
-  exe 'silent' a:cmd
+  let is_project = a:cmd == 'project'
+  exe 'silent' (is_project ? 'aboveleft vnew | 50wincmd |' :  a:cmd)
   setlocal buftype=nofile noswapfile nobuflisted ft=treeview
   if is_explorer
     setlocal bufhidden=wipe
@@ -95,6 +98,7 @@ fun! tree#show(cmd, args) abort
   let b:Tree.history = copy(s:History)
   let b:Tree.history.dirs = [b:Tree.dir]
   let b:Tree.altfile = altfile
+  let b:Tree.is_project = is_project
 
   " fill buffer with command output and assign buffer mappings
   call b:Tree.fill()
@@ -166,24 +170,19 @@ fun! s:Tree.action_on_line(with_tree, cmd) abort
   let item = s:item_at_line()
 
   "add to history and descend into directory with Tree
-  if a:with_tree && isdirectory(item)
-    let self.dir = item
-    call self.history.add(self.dir)
-    call self.refresh()
+  if a:with_tree
+    if isdirectory(item)
+      let self.dir = item
+      call self.history.add(self.dir)
+      call self.refresh()
+    else
+      " not possible to descend into a file...
+      echo "[Tree] Not a directory"
+    endif
 
-  " open directory in normal explorer
-  elseif isdirectory(item)
-    " don't the tree buffer becomes the alternate file in this case
-    silent 0file
-    exe a:cmd s:fnameescape(item)
-
-  " not possible to descend into a file...
-  elseif a:with_tree
-    echo "[Tree] Not a directory"
-
-  " open the file in current window
-  elseif filereadable(item)
-    exe a:cmd s:fnameescape(item)
+  " open directory or file
+  elseif isdirectory(item) || filereadable(item)
+    call self.open(a:cmd, item)
 
   " something went wrong
   else
@@ -191,6 +190,17 @@ fun! s:Tree.action_on_line(with_tree, cmd) abort
   endif
 endfun
 
+
+fun! s:Tree.open(cmd, item)
+  " Open a directory or file.
+  if self.is_project && a:cmd == 'edit' && len(tabpagebuflist()) > 1
+    wincmd l
+    exe 'edit' s:fnameescape(a:item)
+    wincmd p
+  else
+    exe a:cmd s:fnameescape(a:item)
+  endif
+endfun
 
 fun! s:Tree.go_up()
   " Go to the parent directory.
