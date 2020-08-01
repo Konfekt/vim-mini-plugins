@@ -289,7 +289,7 @@ fun! s:Tree.depth(change)
   endif
 
   " apply change
-  let depth += a:change
+  let depth = max([1, depth + a:change])
 
   " remove the old depth
   if match(self.options, '\s*\-L \d\+') >= 0
