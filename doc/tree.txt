@@ -1,7 +1,18 @@
 *tree.txt* tree
 
 
-INTRODUCTION                                                        *tree.vim*
+TREE - TABLE OF CONTENTS                                            *tree.vim*
+==============================================================================
+
+  Usage..............................................|tree-usage|
+  Commands...........................................|tree-commands|
+  Mappings...........................................|tree-mappings|
+  Project drawer mode................................|tree-project-drawer|
+  Settings...........................................|tree-settings|
+
+
+
+USAGE                                                             *tree-usage*
 ==============================================================================
 
   It's a wrapper for the `tree` executable that works as file browser that
@@ -18,9 +29,14 @@ COMMANDS                                                       *tree-commands*
   *:Tree*     start in the current window
   *:VTree*    start in a vertical split
   *:STree*    start in an horizontal split
+  *:PTree*    start |tree-project-drawer|
 
-  All commands accept the same kind of arguments that the `tree` command
+  All commands accept the same kind of switches that the `tree` command
   accepts. See `man tree` in the shell.
+
+  The switches must be entered either `all before` the path, or `all after`
+  it, you can't enter the path between switches (differently from the shell
+  command).
 
 
 
@@ -36,6 +52,25 @@ MAPPINGS                                                       *tree-mappings*
     `-+`    :Tree
     `-V`    :VTree
     `-S`    :STree
+    `-P`    :PTree
+
+  Inside the |tree| window many <buffer> mappings are defined, for navigation
+  and item selection/manipulation.
+
+  Press <F1> in the |tree| window to display them.
+
+
+
+
+PROJECT DRAWER MODE                                        *tree-project-mode*
+==============================================================================
+
+  If started with the |:PTree| command, |tree| will run in project drawer
+  mode, that is, the |tree| window will be placed on the left.
+
+  In this mode, selecting an item with <CR>, instead of opening the file in
+  the same window as usual, will open it in the next window, then the cursor
+  will be brought back to the |tree| window.
 
 
 
@@ -51,6 +86,7 @@ SETTINGS                                                       *tree-settings*
   Default: 2                                            *g:tree_default_depth*
 
     This option is the same of the `-L` switch of the `tree` command.
+    It is ignored if the previous option is not empty.
 
 
   Default: 1                                      *g:tree_syntax_highlighting*
@@ -59,10 +95,6 @@ SETTINGS                                                       *tree-settings*
 
 
 
-LICENSE                                                         *tree-license*
-==============================================================================
-
-MIT license
 
 
 ==============================================================================
