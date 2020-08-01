@@ -395,6 +395,7 @@ fun! s:maps() abort
   nnoremap <silent><buffer><nowait> -       :call b:Tree.go_up()<cr>
   nnoremap <silent><buffer><nowait> o       :call b:Tree.action_on_line(1, '')<cr>
   nnoremap         <buffer><nowait> .       :! <C-r>=b:Tree.item_in_quotes()<cr><Home><Right>
+  nnoremap         <buffer><nowait> y       :let @" = <C-r>=b:Tree.item_in_quotes()<cr><cr>:echo 'Item copied to @"'<cr>
   nnoremap <silent><buffer><nowait> gh      :call b:Tree.toggle_option('a', 'hidden elements')<cr>
   nnoremap <silent><buffer><nowait> gd      :call b:Tree.toggle_option('d', 'directories only')<cr>
   nnoremap <silent><buffer><nowait> gr      :call b:Tree.refresh()<cr>
@@ -423,6 +424,7 @@ fun! s:help()
   echo "v         open directory/file in a vertical split"
   echo "t         open directory/file in a new tab"
   echo ".         populate command line with path"
+  echo "y         copy path to register \""
   echo "gd        toggle -d switch (directories only)"
   echo "gh        toggle -h switch (hidden elements)"
   echo "gr        refresh"
