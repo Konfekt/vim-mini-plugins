@@ -200,16 +200,20 @@ fun! s:Tree.go_up()
 endfun
 
 
-fun! s:Tree.move(up, move_by_root, skip_files) abort
+fun! s:Tree.move(cnt, up, move_by_root, type) abort
   " Go to closest item above or below.
   let pos = getcurpos()
+  let [ skip_files, skip_dirs ] = [ a:type == 1, a:type == -1 ]
   while ( a:up ? line('.') > 1 : line('.') != line("$") )
-    exe 'normal' ( a:up ? 'k' : 'j' )
+    for n in range(a:cnt)
+      exe 'normal!' (a:up ? 'k0' : 'j0')
+    endfor
+    call search(s:item_pat, 'W', line('.'))
     if a:move_by_root && virtcol('.') > 5
       continue
     endif
     let item = s:item_at_line()
-    if isdirectory(item) || !a:skip_files && filereadable(item)
+    if (!skip_dirs && isdirectory(item)) || (!skip_files && filereadable(item))
       return
     endif
   endwhile
@@ -343,15 +347,21 @@ endfun
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 let s:char_under_cursor = { -> matchstr(getline('.'), '\%' . col('.') . 'c.') }
+let s:item_pat = has('win32') ? '\w' : '.*─ \zs.'
 
 
 fun! s:maps() abort
   " Assign buffer mappings.
   nnoremap <silent><buffer><nowait> q       :call b:Tree.quit()<cr>
-  nnoremap <silent><buffer><nowait> j       :<c-u>exe 'normal!' v:count1.'j0'<cr>:call search('\w', 'W', line('.'))<cr>
-  nnoremap <silent><buffer><nowait> k       :<c-u>exe 'normal!' v:count1.'k0'<cr>:call search('\w', 'W', line('.'))<cr>
-  nnoremap <silent><buffer><nowait> J       :call b:Tree.move(0, 1, 1)<cr>
-  nnoremap <silent><buffer><nowait> K       :call b:Tree.move(1, 1, 1)<cr>
+  nnoremap <silent><buffer><nowait> j       :<C-u>call b:Tree.move(v:count1, 0, 0, 0)<cr>
+  nnoremap <silent><buffer><nowait> k       :<C-u>call b:Tree.move(v:count1, 1, 0, 0)<cr>
+
+  nnoremap <silent><buffer><nowait> J       :<C-u>call b:Tree.move(v:count1, 0, 1, 1)<cr>
+  nnoremap <silent><buffer><nowait> K       :<C-u>call b:Tree.move(v:count1, 1, 1, 1)<cr>
+  nnoremap <silent><buffer><nowait> d       :<C-u>call b:Tree.move(v:count1, 0, 0, 1)<cr>
+  nnoremap <silent><buffer><nowait> f       :<C-u>call b:Tree.move(v:count1, 0, 0, -1)<cr>
+  nnoremap <silent><buffer><nowait> D       :<C-u>call b:Tree.move(v:count1, 1, 0, 1)<cr>
+  nnoremap <silent><buffer><nowait> F       :<C-u>call b:Tree.move(v:count1, 1, 0, -1)<cr>
 
   nnoremap <silent><buffer><nowait> <CR>    :<C-u>call b:Tree.action_on_line(0, 'edit')<cr>
   nnoremap <silent><buffer><nowait> v       :<C-u>call b:Tree.action_on_line(0, 'vsplit')<cr>
@@ -382,6 +392,10 @@ fun! s:help()
   echo "k         move to item above"
   echo "J         move up by root subdirs"
   echo "K         move down by root subdirs"
+  echo "d         move to next directory"
+  echo "f         move to next file"
+  echo "D         move to previous directory"
+  echo "F         move to previous file"
   echo "<F1>      this help"
   echo "<F2>      history backward"
   echo "<F3>      history forward"
@@ -482,7 +496,7 @@ fun! s:item_at_line(...) abort
   let item = getline(line)[icol:]
 
   " go up, and when an item at a lower level is found, it's a parent
-  " in this case update the item name, prepanding the parent's name
+  " in this case update the item name, prepending the parent's name
   while line > 2
     let line -= 1
     let L = getline(line)
