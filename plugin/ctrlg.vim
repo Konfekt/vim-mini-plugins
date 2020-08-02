@@ -16,7 +16,7 @@ let g:loaded_ctrlg = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:win  = has("win32") || has("win64") || has("win16")
+let s:win = has("win32") || has("win64") || has("win16")
 "}}}
 
 "------------------------------------------------------------------------------
@@ -32,44 +32,74 @@ endif
 "------------------------------------------------------------------------------
 
 fun! CtrlG(cnt)
-  " percentage
-  let l = str2float(line('.').".0") / line("$") * 100
-  let perc = string(float2nr(l)) . "%"
-
   let buf = "Buf ".bufnr('')
-  let file = a:cnt? expand('%:p') : expand('%')
-  let file = file == '' ? s:tr('unnamed') : file
-  let mod = !&modified? '' : printf('[%s] ', s:tr('modified'))
-  let lines = printf('%s / %s %s', line('.'), line('$'), s:tr('lines'))
+  let all = a:cnt ? execute("normal! 1\<C-G>") : execute("normal! \<C-G>")
+  let file = matchstr(all, '"\zs.*\ze"')
 
-  if !filereadable(file)
-    let info = "        " . s:tr("nofile")
-    let warn = 1
-  else
-    let info = s:win ? '' : substitute(system('ls -l "'.file.'"'), '\('.file.'\)\?\n', '', '')
-    let info = "        " . info
-    let warn = 0
+  " all things enclosed in square brackets
+  let mod = substitute(matchstr(all, '\[.*\]'), '\]', '] ', 'g')
+  if stridx(mod, file) == 0
+    let file = ''
+  endif
+  let mod   = substitute(mod, '"', '', 'g')
+  let mod   = substitute(mod, '\s\+', ' ', 'g')
+
+  let all   = substitute(all, '.*]', '', 'g')
+  let perc  = matchstr(all,  '--\zs.*\ze--')
+  let lines = matchstr(all, '\%(.*"\)\?\zs.\{-}\ze--')
+
+  " make arglist string more compact
+  let args  = matchstr(all, '.*--\s\+\zs(.*)')
+  if args =~ '\S'
+    let args  = substitute(args, '\v\(.{-}(\(?\d+\)?).*(\d+)\)', '  [\1/\2]', '')
   endif
 
-  let all = strwidth(buf.file.perc.mod.lines) + 18 "18 is 6x3 separators
+  " add current line to lines count
+  if lines =~ '\d'
+    let lines = printf('%s /%s', line('.'), lines)
+  endif
+
+  " add output of ls -l {file}
+  if !filereadable(expand('%')) || s:win
+    let info = ''
+  else
+    let sh = shellescape(expand('%:p'))
+    let info = "    " . join(split(system('ls -l '.sh.''))[:7])
+  endif
+
+  " we'll need to trim the line if too long, 6 is the length of separators
+  let all = strwidth(buf) + 6
+  if mod =~ '\S'   | let all += strwidth(mod) + 6   | endif
+  if file =~ '\S'  | let all += strwidth(file) + 6  | endif
+  if perc =~ '\S'  | let all += strwidth(perc) + 6  | endif
+  if lines =~ '\S' | let all += strwidth(lines) + 6 | endif
+  if args =~ '\S'  | let all += strwidth(args)  | endif
+
   let max = &columns - all - 20
   if len(info) > max
     let info = info[:max]."…"
   endif
 
-  echohl Constant   | echo mod
-  echohl Special    | echon buf
-  echohl WarningMsg | echon "  >>  "
-  echohl Directory  | echon file
-  echohl WarningMsg | echon "  >>  "
-  echohl Special    | echon perc
-  echohl WarningMsg | echon "  >>  "
-  echohl None       | echon lines
-  if warn
-    echohl WarningMsg
-  else
-    echohl Type
+  if mod =~ '\S'
+    echohl Constant   | echo mod
   endif
+  echohl Special      | echon buf
+  if file =~ '\S'
+    echohl WarningMsg | echon "  >>  "
+    echohl Directory  | echon file
+  endif
+  if args =~ '\S'
+    echohl Constant   | echon args
+  endif
+  if perc =~ '\S'
+    echohl WarningMsg | echon "  >>  "
+    echohl Special    | echon perc
+  endif
+  if lines =~ '\S'
+    echohl WarningMsg | echon "  >>  "
+    echohl None       | echon lines
+  endif
+  echohl Type
   echon info
   echohl None
 endfun
@@ -98,33 +128,6 @@ fun! GCtrlG() abort
   echohl None
 endfun
 
-
-let s:langs = {
-      \ 'en': ['Modified',   'lines', 'Not a file.', '[No Name]'],
-      \ 'it': ['Modificato', 'righe', 'File inesistente', '[Senza nome]']
-      \}
-
-let s:tr_dict = {
-      \ 'modified': 0,
-      \ 'lines': 1,
-      \ 'nofile': 2,
-      \ 'unnamed': 3
-      \}
-
-fun! s:tr(string)
-  try
-    if exists('g:ctrlg_lang')
-      return g:ctrlg_lang[s:tr_dict[a:string]]
-    endif
-    let lang = exists("$LANG") ? tolower($LANG[:1]) : 'en'
-    if !has_key(s:langs, lang)
-      let lang = 'en'
-    endif
-    return s:langs[lang][s:tr_dict[a:string]]
-  catch
-    return s:langs['en'][s:tr_dict[a:string]]
-  endtry
-endfun
 
 "--------------------------------------------------------------------------{{{1
 

@@ -7,12 +7,8 @@ USAGE                                                              *ctrlg.vim*
 
 It remaps <C-G> and g<C-G> in normal mode, replacing |CTRL-G| and |g_CTRL-G|.
 
-You can add support to your language by creating a variable:
->
-  let g:ctrlg_lang = ['Modified', 'lines', 'Not a file.', '[No Name]']
-<
-and you should translate those strings into your own language.
+<C-G> accepts a count to display the full path.
 
 
 ==============================================================================
-vim:tw=78:ft=help:norl:noet:fen:fdl=0:
+vim:tw=78:ft=help:norl:et:fen:fdl=0:
