@@ -25,6 +25,10 @@ if maparg('<c-g>', 'n') == ''
   nnoremap <silent> <c-g> :<c-u>call CtrlG(v:count)<cr>
 endif
 
+if maparg('g<c-g>', 'n') == ''
+  nnoremap <silent> g<c-g> :<c-u>call GCtrlG()<cr>
+endif
+
 "------------------------------------------------------------------------------
 
 fun! CtrlG(cnt)
@@ -67,6 +71,30 @@ fun! CtrlG(cnt)
     echohl Type
   endif
   echon info
+  echohl None
+endfun
+
+
+fun! GCtrlG() abort
+  let all = split(substitute(execute("normal! g\<C-G>"), '\n', '', ''), ';')
+  call map(all, 'split(v:val)')
+  let n = 0
+  echo "\r"
+  for list in all
+    for string in list
+      if str2nr(string) > 0
+        echohl Number
+      else
+        echohl None
+      endif
+      echon string . ' '
+    endfor
+    let n += 1
+    if n < len(all)
+      echohl NonText
+      echon " >>  "
+    endif
+  endfor
   echohl None
 endfun
 

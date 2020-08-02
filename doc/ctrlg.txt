@@ -5,7 +5,7 @@
 USAGE                                                              *ctrlg.vim*
 ==============================================================================
 
-It remaps <C-G> in normal mode, replacing |CTRL-G|.
+It remaps <C-G> and g<C-G> in normal mode, replacing |CTRL-G| and |g_CTRL-G|.
 
 You can add support to your language by creating a variable:
 >
