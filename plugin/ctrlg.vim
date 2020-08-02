@@ -22,18 +22,19 @@ let s:win  = has("win32") || has("win64") || has("win16")
 "------------------------------------------------------------------------------
 
 if maparg('<c-g>', 'n') == ''
-  nnoremap <silent> <c-g> :<c-u>call CtrlG()<cr>
+  nnoremap <silent> <c-g> :<c-u>call CtrlG(v:count)<cr>
 endif
 
 "------------------------------------------------------------------------------
 
-fun! CtrlG()
+fun! CtrlG(cnt)
   " percentage
   let l = str2float(line('.').".0") / line("$") * 100
   let perc = string(float2nr(l)) . "%"
 
   let buf = "Buf ".bufnr('')
-  let file = expand("%") == '' ? s:tr('unnamed') : expand('%')
+  let file = a:cnt? expand('%:p') : expand('%')
+  let file = file == '' ? s:tr('unnamed') : file
   let mod = !&modified? '' : printf('[%s] ', s:tr('modified'))
   let lines = printf('%s / %s %s', line('.'), line('$'), s:tr('lines'))
 
