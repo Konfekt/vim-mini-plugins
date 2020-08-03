@@ -68,7 +68,7 @@ fun! CtrlG(cnt)
     let info = ''
   else
     let sh = shellescape(expand('%:p'))
-    let info = "    " . join(split(system('ls -l '.sh.''))[:7])
+    let info = join(split(system('ls -l '.sh.''))[:7])
   endif
 
   " we'll need to trim the line if too long, 6 is the length of separators
@@ -79,9 +79,15 @@ fun! CtrlG(cnt)
   if lines =~ '\S' | let all += strwidth(lines) + 6 | endif
   if args =~ '\S'  | let all += strwidth(args)  | endif
 
-  let max = &columns - all - 20
+  " we don't trim it if called with count
+  let max = &columns - all - 15
+  let newln = 0
   if len(info) > max
-    let info = info[:max]."…"
+    if !a:cnt
+      let info = info[:max]."…"
+    else
+      let newln = 1
+    endif
   endif
 
   if mod =~ '\S'
@@ -103,9 +109,13 @@ fun! CtrlG(cnt)
     echohl WarningMsg | echon "  >>  "
     echohl None       | echon lines
   endif
-  echohl Type
-  echon info
-  echohl None
+  if info =~ '\S'
+    echohl Type
+    if newln | echo info
+    else     | echon '   ' info
+    endif
+    echohl None
+  endif
 endfun
 
 
