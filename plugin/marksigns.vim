@@ -115,7 +115,7 @@ fun! s:add_or_delete_mark(delete, mark) abort
       return
     elseif mark !~ '[A-Za-z]'
       " let vim handle the others
-      exe 'k' . mark
+      exe (a:delete ? 'delmarks ' : 'mark ') . mark
       return
     endif
   endif
@@ -151,6 +151,15 @@ fun! s:toggle(force_disable) abort
   call s:update_buffer(0)
 endfun "}}}
 
+fun! s:update_all_windows() abort
+  " Update signs for all windows in current tab. {{{1
+  let curwin = winnr()
+  for w in range(winnr('$'))
+    noautocmd exe (w+1).'wincmd w'
+    call b:mark_signs.update_all()
+  endfor
+  exe curwin . 'wincmd w'
+endfun "}}}
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -258,7 +267,11 @@ fun! s:Signs.delete_mark(mark) abort
   " Delete a mark, if assigned. {{{1
   if index(keys(self.marks), a:mark) >= 0
     exe 'silent! delmarks' a:mark
-    call self.remove_sign(a:mark)
+    if a:mark =~ '[A-Z]'
+      call s:update_all_windows()
+    else
+      call self.remove_sign(a:mark)
+    endif
   else
     call s:warn('Mark '.a:mark.' not defined')
   endif
@@ -267,7 +280,11 @@ endfun "}}}
 fun! s:Signs.add_mark(mark) abort
   " Add a mark, and relative sign. {{{1
   exe 'mark' a:mark
-  call self.update_all()
+  if a:mark =~ '[A-Z]'
+    call s:update_all_windows()
+  else
+    call self.update_all()
+  endif
 endfun "}}}
 
 
