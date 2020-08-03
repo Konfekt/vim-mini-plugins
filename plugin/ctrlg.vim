@@ -53,6 +53,10 @@ fun! CtrlG(cnt)
   if args =~ '\S'
     let args  = substitute(args, '\v\(.{-}(\(?\d+\)?).*(\d+)\)', '  [\1/\2]', '')
   endif
+  " don't print args if current file is not in arglist, and not using count
+  if args =~ '(' && !a:cnt
+    let args = ''
+  endif
 
   " add current line to lines count
   if lines =~ '\d'
