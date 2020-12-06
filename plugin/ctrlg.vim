@@ -59,7 +59,7 @@ fun! CtrlG(cnt)
   endif
 
   " add current line to lines count
-  if lines =~ '\d'
+  if v:version < 802 && lines =~ '\d'
     let lines = printf('%s /%s', line('.'), lines)
   endif
 
