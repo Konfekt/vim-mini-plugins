@@ -215,6 +215,9 @@ function! s:mru_fzf(fullscreen)
    let bmarks = copy(get(s:, 'bookmarks', s:load_bmarks_list()))
    call extend(mru, bmarks, 'index(mru, v:val) < 0')
    call extend(mru, filter(copy(s:oldfiles), 'index(mru, v:val) < 0'))
+   
+   " ensure file exists
+   call filter(mru, 'filereadable(v:val) || isdirectory(v:val)')
 
    if exists('g:loaded_finder') " use Finder
       call FileFinder(mru, 'Recent files')
