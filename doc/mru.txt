@@ -12,9 +12,12 @@ similar plugin by Yegappan Lakshmanan.
 COMMANDS                                                        *mru-commands*
 ==============================================================================
                                                                         *:Mru*
-  Type `:Mru` to start the command.
+  `:Mru` starts the command.
                                                                     *:MruLock*
-  Type `:MruLock` to toggle the tracking of files.
+  `:MruLock` toggles the tracking of files.
+                                                                *:MruBookmark*
+  `:MruBookmark` adds current file to bookmarks.
+  `:MruBookmark!` removes current file from bookmarks.
 
 
 

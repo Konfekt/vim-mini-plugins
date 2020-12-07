@@ -37,34 +37,25 @@ augroup MRU_augroup
 augroup END
 
 " bang is used for fullscreen
-command! -bang Mru      call s:mru_fzf(<bang>0)
+command! -bar -bang Mru      call s:mru_fzf(<bang>0)
+
+" bang deletes bookmark
+command! -bar -bang MruBookmark  call s:bookmark(<bang>0, bufnr(''))
 
 " lock without bang, unlock with bang
-command! -bang MruLock  call s:mru_lock(<bang>0)
-
-" main mapping
-nnoremap \fr        :Mru<cr>
+command! -bar -bang MruLock  call s:mru_lock(<bang>0)
 
 
 
 " Initialization                    {{{1
 
 function! s:init()
+   let prefix = s:get_prefix()
    if !exists('g:MRU_File')
-      if has('nvim')
-         let g:MRU_File = expand(stdpath('data')) . '/.vim_mru_files'
-      elseif isdirectory(expand('~/.vim'))
-         let g:MRU_File = expand('~/.vim') . '/.vim_mru_files'
-      elseif exists('$HOME')
-         let g:MRU_File = $HOME . '/.vim_mru_files'
-      elseif has('win32')
-         if $USERPROFILE != ''
-            let g:MRU_File = $USERPROFILE . '\_vim_mru_files'
-         else
-            let g:MRU_File = $VIM . '/_vim_mru_files'
-         endif
-      endif
-      let g:MRU_File=expand(g:MRU_File)
+      let g:MRU_File = expand(prefix . 'files')
+   endif
+   if !exists('g:MRU_Bookmarks')
+      let g:MRU_Bookmarks = expand(prefix . 'bookmarks')
    endif
 
    " Files to exclude from the MRU list
@@ -76,6 +67,23 @@ function! s:init()
       let s:mru_list_locked = 0
    endif
 endfunction
+
+function! s:get_prefix() abort
+   "{{{2
+   if isdirectory(expand('~/.vim'))
+      return expand('~/.vim') . '/.vim_mru_'
+   elseif has('nvim')
+      return expand(stdpath('data')) . '/.vim_mru_'
+   elseif exists('$HOME')
+      return $HOME . '/.vim_mru_'
+   elseif has('win32')
+      if $USERPROFILE != ''
+         return $USERPROFILE . '\_vim_mru_'
+      else
+         return $VIM . '/_vim_mru_'
+      endif
+   endif
+endfunction "}}}
 
 call s:init()
 
@@ -123,6 +131,44 @@ function! s:save_list()
 endfunction
 
 
+" Bookmarks                          {{{1
+
+function! s:bookmark(remove, bnr) abort
+   let l = ['# MRU bookmarks list'] + get(s:, 'bookmarks', s:load_bmarks_list())
+   let f = fnamemodify(bufname(a:bnr), ':p')
+   let ix = index(l, f)
+   if a:remove
+      if ix >= 0
+         call remove(l, ix)
+         echo 'Removed' f 'from bookmarks'
+      else
+         echo f 'is not bookmarked'
+         return
+      endif
+   elseif ix < 0
+      call add(l, f)
+      echo 'Added' f 'to bookmarks'
+   else
+      echo f 'is already bookmarked'
+      return
+   endif
+   call writefile(l, g:MRU_Bookmarks)
+endfunction
+
+" Bookmarks list                {{{2
+function! s:load_bmarks_list() abort
+   let s:bookmarks = []
+   if filereadable(g:MRU_Bookmarks)
+      let s:bookmarks = readfile(g:MRU_Bookmarks)
+      if s:bookmarks[0] =~# '^#'
+         call remove(s:bookmarks, 0)
+      endif
+   endif
+   return s:bookmarks
+endfunction "}}}
+
+
+
 " Load list                          {{{1
 
 function! s:load_list()
@@ -154,8 +200,8 @@ endfunction
 " Finder/fzf                        {{{1
 
 function! s:mru_fzf(fullscreen)
-   if !exists('g:MRU_File')
-      " Variable not set for some reason
+   " Variable not set for some reason
+   if !exists('s:mru')
       call s:init()
    endif
 
@@ -164,8 +210,10 @@ function! s:mru_fzf(fullscreen)
       let s:oldfiles = filter(copy(v:oldfiles), 'filereadable(v:val)')
    endif
 
-   " integrate files from viminfo, if not already in the list
+   " integrate bookmarks and files from viminfo, if not already in the list
    let mru = copy(s:mru)
+   let bmarks = copy(get(s:, 'bookmarks', s:load_bmarks_list()))
+   call extend(mru, bmarks, 'index(mru, v:val) < 0')
    call extend(mru, filter(copy(s:oldfiles), 'index(mru, v:val) < 0'))
 
    if exists('g:loaded_finder') " use Finder
