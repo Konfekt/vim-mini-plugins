@@ -213,7 +213,7 @@ function! s:mru_fzf(fullscreen)
    " integrate bookmarks and files from viminfo, if not already in the list
    let mru = copy(s:mru)
    let bmarks = copy(get(s:, 'bookmarks', s:load_bmarks_list()))
-   call extend(mru, bmarks, 'index(mru, v:val) < 0')
+   call extend(mru, filter(bmarks, 'index(mru, v:val) < 0'))
    call extend(mru, filter(copy(s:oldfiles), 'index(mru, v:val) < 0'))
    
    " ensure file exists
