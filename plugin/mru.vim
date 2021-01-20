@@ -205,6 +205,11 @@ function! s:mru_fzf(fullscreen)
       call s:init()
    endif
 
+   " Load the MRU file list
+   if empty(s:mru)
+      let s:mru = s:load_list()
+   endif
+
    " get the valid files from viminfo only once
    if !exists('s:oldfiles')
       let s:oldfiles = filter(copy(v:oldfiles), 'filereadable(v:val)')
@@ -215,7 +220,7 @@ function! s:mru_fzf(fullscreen)
    let bmarks = copy(get(s:, 'bookmarks', s:load_bmarks_list()))
    call extend(mru, filter(bmarks, 'index(mru, v:val) < 0'))
    call extend(mru, filter(copy(s:oldfiles), 'index(mru, v:val) < 0'))
-   
+
    " ensure file exists
    call filter(mru, 'filereadable(v:val) || isdirectory(v:val)')
 
