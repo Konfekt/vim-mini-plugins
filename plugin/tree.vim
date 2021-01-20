@@ -112,7 +112,7 @@ endfun
 " Tree class
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-let s:Tree = {'dirs_only': 0, 'hidden': 0, 'current': '.'}
+let s:Tree = {'dirs_only': 0, 'hidden': 0, 'current': '.', 'has_preview': 0}
 
 
 fun! s:Tree.fill() abort
@@ -180,6 +180,10 @@ fun! s:Tree.action_on_line(with_tree, cmd) abort
       echo "[Tree] Not a directory"
     endif
 
+  " preview file
+  elseif a:cmd == 'preview'
+    call self.preview(item)
+
   " open directory or file
   elseif isdirectory(item) || filereadable(item)
     call self.open(a:cmd, item)
@@ -200,6 +204,27 @@ fun! s:Tree.open(cmd, item)
     call search(s:item_pat, 'W', line('.'))
   else
     exe a:cmd s:fnameescape(a:item)
+  endif
+endfun
+
+
+fun! s:Tree.preview(item)
+  " Open file preview.
+  if !filereadable(a:item)
+    echo "[Tree] Invalid item"
+    return
+  endif
+  let self.has_preview = v:true
+  let setheight = (&lines / 2) . 'wincmd _'
+  if self.is_project
+    wincmd l
+    exe 'pedit' s:fnameescape(a:item)
+    exe setheight
+    wincmd t
+  else
+    exe 'pedit' s:fnameescape(a:item)
+    exe setheight
+    exe 'wincmd' (&splitbelow ? 'k' : 'j')
   endif
 endfun
 
@@ -325,6 +350,9 @@ fun! s:Tree.cleanup() abort
       exe bn.'bw'
     endif
   endfor
+  if self.has_preview
+    silent! pclose
+  endif
 endfun
 
 
@@ -386,6 +414,7 @@ fun! s:maps() abort
 
   nnoremap <silent><buffer><nowait> o       :<C-u>call b:Tree.action_on_line(0, 'edit')<cr>
   nnoremap <silent><buffer><nowait> <CR>    :<C-u>call b:Tree.action_on_line(0, 'edit')<cr>
+  nnoremap <silent><buffer><nowait> p       :<C-u>call b:Tree.action_on_line(0, 'preview')<cr>
   nnoremap <silent><buffer><nowait> v       :<C-u>call b:Tree.action_on_line(0, 'vsplit')<cr>
   nnoremap <silent><buffer><nowait> s       :<C-u>call b:Tree.action_on_line(0, 'split')<cr>
   nnoremap <silent><buffer><nowait> t       :<C-u>call b:Tree.action_on_line(0, 'tabedit')<cr>
@@ -422,6 +451,7 @@ fun! s:help()
   echo "-         go to parent directory"
   echo "d         descend into directory"
   echo "o/<CR>    open directory/file"
+  echo "p         preview file"
   echo "s         open directory/file in a horizontal split"
   echo "v         open directory/file in a vertical split"
   echo "t         open directory/file in a new tab"
