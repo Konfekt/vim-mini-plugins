@@ -379,11 +379,12 @@ fun! s:maps() abort
 
   nnoremap <silent><buffer><nowait> J       :<C-u>call b:Tree.move(v:count1, 0, 1, 1)<cr>
   nnoremap <silent><buffer><nowait> K       :<C-u>call b:Tree.move(v:count1, 1, 1, 1)<cr>
-  nnoremap <silent><buffer><nowait> d       :<C-u>call b:Tree.move(v:count1, 0, 0, 1)<cr>
-  nnoremap <silent><buffer><nowait> f       :<C-u>call b:Tree.move(v:count1, 0, 0, -1)<cr>
-  nnoremap <silent><buffer><nowait> D       :<C-u>call b:Tree.move(v:count1, 1, 0, 1)<cr>
-  nnoremap <silent><buffer><nowait> F       :<C-u>call b:Tree.move(v:count1, 1, 0, -1)<cr>
+  nnoremap <silent><buffer><nowait> L       :<C-u>call b:Tree.move(v:count1, 0, 0, 1)<cr>
+  nnoremap <silent><buffer><nowait> l       :<C-u>call b:Tree.move(v:count1, 0, 0, -1)<cr>
+  nnoremap <silent><buffer><nowait> H       :<C-u>call b:Tree.move(v:count1, 1, 0, 1)<cr>
+  nnoremap <silent><buffer><nowait> h       :<C-u>call b:Tree.move(v:count1, 1, 0, -1)<cr>
 
+  nnoremap <silent><buffer><nowait> o       :<C-u>call b:Tree.action_on_line(0, 'edit')<cr>
   nnoremap <silent><buffer><nowait> <CR>    :<C-u>call b:Tree.action_on_line(0, 'edit')<cr>
   nnoremap <silent><buffer><nowait> v       :<C-u>call b:Tree.action_on_line(0, 'vsplit')<cr>
   nnoremap <silent><buffer><nowait> s       :<C-u>call b:Tree.action_on_line(0, 'split')<cr>
@@ -394,7 +395,7 @@ fun! s:maps() abort
   nnoremap <silent><buffer><nowait> <F3>    :call b:Tree.history.go(0)<cr>
 
   nnoremap <silent><buffer><nowait> -       :call b:Tree.go_up()<cr>
-  nnoremap <silent><buffer><nowait> o       :call b:Tree.action_on_line(1, '')<cr>
+  nnoremap <silent><buffer><nowait> d       :call b:Tree.action_on_line(1, '')<cr>
   nnoremap         <buffer><nowait> .       :! <C-r>=b:Tree.item_in_quotes()<cr><Home><Right>
   nnoremap         <buffer><nowait> y       :let @" = <C-r>=b:Tree.item_in_quotes()<cr><cr>:echo 'Item copied to @"'<cr>
   nnoremap <silent><buffer><nowait> gh      :call b:Tree.toggle_option('a', 'hidden elements')<cr>
@@ -414,13 +415,13 @@ fun! s:help()
   echo "k         move to item above"
   echo "J         move up by root subdirs"
   echo "K         move down by root subdirs"
-  echo "d         move to next directory"
-  echo "f         move to next file"
-  echo "D         move to previous directory"
-  echo "F         move to previous file"
+  echo "h         move to previous file"
+  echo "H         move to previous directory"
+  echo "l         move to next file"
+  echo "L         move to next directory"
   echo "-         go to parent directory"
-  echo "o         descend into directory"
-  echo "<CR>      open directory/file"
+  echo "d         descend into directory"
+  echo "o/<CR>    open directory/file"
   echo "s         open directory/file in a horizontal split"
   echo "v         open directory/file in a vertical split"
   echo "t         open directory/file in a new tab"
