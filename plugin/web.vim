@@ -28,16 +28,16 @@ command! -range -nargs=? Google        call s:websearch('google',<line1>,<line2>
 command! -range -nargs=? StackOverFlow call s:websearch('stofl',<line1>,<line2>,<q-args>)
 command! -range -nargs=? Translate     call s:websearch('translate',<line1>,<line2>,<q-args>)
 
-if get(g:, 'web_mappings', 1)
-  nnoremap gou :Url <C-R>=expand('<cWORD>')<CR>
-  nnoremap gog :Google <C-R>=expand('<cword>')<CR>
-  nnoremap gos :StackOverFlow <C-R>=expand('<cword>')<CR>
-  xnoremap gou y:Url <C-r>=escape(@", '\')<cr>
-  xnoremap gog y:Google <C-r>=escape(@", '\')<cr>
-  xnoremap gos y:StackOverFlow <C-r>=escape(@", '\')<cr>
+if get(g:, 'web_mappings', 0)
+  nnoremap goU :Url <C-R>=matchstr(getline('.'), '\(http\\|www\)\S\+')<CR>
+  nnoremap goG :Google <C-R>=expand('<cword>')<CR>
+  nnoremap goS :StackOverFlow <C-R>=expand('<cword>')<CR>
+  xnoremap goU y:Url <C-r>=escape(@", '\')<cr>
+  xnoremap goG y:Google <C-r>=escape(@", '\')<cr>
+  xnoremap goS y:StackOverFlow <C-r>=escape(@", '\')<cr>
 endif
 
-if get(g:, 'web_plugs', 0)
+if get(g:, 'web_plugs', 1)
   nnoremap <Plug>(WebUrl)           :Url <C-R>=matchstr(getline('.'), '\(http\\|www\)\S\+')<CR>
   nnoremap <Plug>(WebGoogle)        :Google <C-R>=expand('<cword>')<CR>
   nnoremap <Plug>(WebStackOverFlow) :StackOverFlow <C-R>=expand('<cword>')<CR>
