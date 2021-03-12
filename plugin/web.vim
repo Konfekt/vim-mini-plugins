@@ -38,7 +38,7 @@ if get(g:, 'web_mappings', 1)
 endif
 
 if get(g:, 'web_plugs', 0)
-  nnoremap <Plug>(WebUrl)           :Url <C-R>=expand('<cWORD>')<CR>
+  nnoremap <Plug>(WebUrl)           :Url <C-R>=matchstr(getline('.'), '\(http\\|www\)\S\+')<CR>
   nnoremap <Plug>(WebGoogle)        :Google <C-R>=expand('<cword>')<CR>
   nnoremap <Plug>(WebStackOverFlow) :StackOverFlow <C-R>=expand('<cword>')<CR>
   xnoremap <Plug>(WebUrl)           y:Url <C-r>=escape(@", '\')<cr>
