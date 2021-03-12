@@ -126,7 +126,7 @@ endfunction
 
 function! s:save_list()
    if empty(s:mru) | return | endif
-   let l = ['# MRU files list'] + s:mru
+   let l = ['# MRU files list'] + filter(s:mru, 'filereadable(v:val)')
    call writefile(l, g:MRU_File)
 endfunction
 
@@ -156,15 +156,15 @@ function! s:bookmark(remove, bnr) abort
 endfunction
 
 " Bookmarks list                {{{2
-function! s:load_bmarks_list() abort
-   let s:bookmarks = []
+function! s:load_bmarks_list(mru) abort
    if filereadable(g:MRU_Bookmarks)
-      let s:bookmarks = readfile(g:MRU_Bookmarks)
-      if s:bookmarks[0] =~# '^#'
-         call remove(s:bookmarks, 0)
+      let bookmarks = readfile(g:MRU_Bookmarks)
+      if bookmarks[0] =~# '^#'
+         call remove(bookmarks, 0)
       endif
+      return filter(bookmarks, 'index(a:mru, expand(v:val)) < 0')
    endif
-   return s:bookmarks
+   return []
 endfunction "}}}
 
 
@@ -180,9 +180,17 @@ function! s:load_list()
          call remove(mru, 0)
       endif
    endif
-   return mru
+   return filter(mru, 'filereadable(v:val)')
 endfunction
 
+" Load files from viminfo            {{{1
+
+function! s:load_oldfiles(mru)
+   if !exists('s:oldfiles')
+      let s:oldfiles = map(copy(v:oldfiles), 'fnamemodify(expand(v:val), ":p")')
+   endif
+   return filter(s:oldfiles, 'index(a:mru, v:val) < 0')
+endfunction
 
 " Lock list                         {{{1
 
@@ -210,19 +218,13 @@ function! s:mru_fzf(fullscreen)
       let s:mru = s:load_list()
    endif
 
-   " get the valid files from viminfo only once
-   if !exists('s:oldfiles')
-      let s:oldfiles = filter(copy(v:oldfiles), 'filereadable(v:val)')
-   endif
-
-   " integrate bookmarks and files from viminfo, if not already in the list
+   " integrate bookmarks and files from viminfo
    let mru = copy(s:mru)
-   let bmarks = copy(get(s:, 'bookmarks', s:load_bmarks_list()))
-   call extend(mru, filter(bmarks, 'index(mru, v:val) < 0'))
-   call extend(mru, filter(copy(s:oldfiles), 'index(mru, v:val) < 0'))
+   let mru += s:load_bmarks_list(mru)
+   let mru += s:load_oldfiles(mru)
 
    " ensure file exists
-   call filter(mru, 'filereadable(v:val) || isdirectory(v:val)')
+   call filter(mru, 'filereadable(expand(v:val)) || isdirectory(expand(v:val))')
 
    if exists('g:loaded_finder') " use Finder
       call FileFinder(mru, 'Recent files')
