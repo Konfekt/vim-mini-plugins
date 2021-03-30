@@ -6,25 +6,22 @@
 " ========================================================================///
 
 " Conceal: hide a pattern, BANG clears specific patterns, all if none given.
-
 command! -nargs=? -bang Conceal call conceal#pattern(<bang>0, <q-args>)
 
 ""=============================================================================
 " Function: conceal#pattern
-"
 " Entry point for the Conceal command.
-
 " @param reset: unconceal all or a single pattern.
 " @param pattern: pattern to (un)conceal.
 ""=============================================================================
 ""
 fun! conceal#pattern(reset, pattern)
-  " Entry point.
+  "
   hi Invisible guibg=NONE guifg=bg
-  let b:patterns = get(b:, 'patterns', {})
-  let b:patterns.Invisible = get(b:patterns, 'Invisible', copy(s:Hi))
-  let b:patterns.Invisible.hi = 'Invisible'
-  call b:patterns.Invisible.start(a:reset, a:pattern)
+  let w:conceal_patterns = get(w:, 'conceal_patterns', {})
+  let w:conceal_patterns.Invisible = get(w:conceal_patterns, 'Invisible', copy(s:Hi))
+  let w:conceal_patterns.Invisible.hi = 'Invisible'
+  call w:conceal_patterns.Invisible.start(a:reset, a:pattern)
 endfun
 
 
