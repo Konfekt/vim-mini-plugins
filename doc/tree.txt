@@ -6,7 +6,7 @@ TREE - TABLE OF CONTENTS                                            *tree.vim*
 
   Usage..............................................|tree-usage|
   Commands...........................................|tree-commands|
-  Mappings...........................................|tree-mappings|
+  Plugs..............................................|tree-plugs|
   Project drawer mode................................|tree-project-drawer|
   Settings...........................................|tree-settings|
 
@@ -23,39 +23,38 @@ USAGE                                                             *tree-usage*
 
 COMMANDS                                                       *tree-commands*
 ==============================================================================
+                                                              *:Tree* *:PTree*
+  <mods> Tree[!] [args]~
 
-    Tree [args]~
-
-  *:Tree*     start in the current window
-  *:VTree*    start in a vertical split
-  *:STree*    start in an horizontal split
-  *:PTree*    start |tree-project-drawer|
+  `:Tree`         start in an horizontal split
+  `:Tree!`        start in the current window
+  `:vert Tree`    start in a vertical split
+  `:tab Tree`     start in a new tab
+  `:PTree`        start |tree-project-drawer|
 
   All commands accept the same kind of switches that the `tree` command
   accepts. See `man tree` in the shell.
 
-  The switches must be entered either `all before` the path, or `all after`
-  it, you can't enter the path between switches (differently from the shell
-  command).
 
 
 
-MAPPINGS                                                       *tree-mappings*
+PLUGS                                                             *tree-plugs*
 ==============================================================================
 
-  Mappings can be disabled by setting:
+  <Plug>(Tree-Split)      same as `:Tree`
+  <Plug>(Tree-Vsplit)     same as `:vert Tree`
+  <Plug>(Tree-Here)       same as `:Tree!`
+  <Plug>(Tree-Project)    same as `:PTree`
+
+  Example mappings:
 >
-    let g:tree_mappings = 0
+    nmap -+ <Plug>(Tree-Here)
+    nmap -V <Plug>(Tree-Vsplit)
+    nmap -S <Plug>(Tree-Split)
+    nmap -P <Plug>(Tree-Project)
 <
-  Default mappings:
-
-    `-+`    :Tree
-    `-V`    :VTree
-    `-S`    :STree
-    `-P`    :PTree
-
   Inside the |tree| window many <buffer> mappings are defined, for navigation
-  and item selection/manipulation.
+  and item selection.
 
   Press <F1> in the |tree| window to display them.
 
@@ -73,7 +72,8 @@ PROJECT DRAWER MODE                                        *tree-project-mode*
   the same window as usual, will open it in the next window, then the cursor
   will be brought back to the |tree| window.
 
-  Other ways of opening files/directories are not affected.
+  Running the `:PTree` command will close any open `Tree` buffer. If it was
+  not a |PTree| buffer, it will be opened again in project-drawer mode.
 
 
 
@@ -101,4 +101,4 @@ SETTINGS                                                       *tree-settings*
 
 
 ==============================================================================
-vim:tw=78:ft=help:norl:et:fen:fdl=0:
+vim:tw=78:sw=2:ts=2:ft=help:norl:et:fen:fdl=0:

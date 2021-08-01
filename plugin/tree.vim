@@ -3,7 +3,7 @@
 " File:        tree.vim
 " Author:      Gianmaria Bajo <mg1979@git.gmail.com>
 " License:     MIT
-" Modified:    ven 18 ottobre 2019 11:59:15
+" Modified:    dom 01 agosto 2021 10:49:25
 " ========================================================================///
 "                    _                             _
 "                   | |_ _ __ ___  ___      __   _(_)_ __ ___
@@ -12,33 +12,24 @@
 "                    \__|_|  \___|\___| (_)   \_/ |_|_| |_| |_|
 
 
-" Limitations:
-"
-" - the path cannot be given between switches, either before or after
-" - an unquoted path cannot contain spaces, use quotes in this cases
-
-
+" GUARD {{{
 if exists('g:loaded_tree')
   finish
 endif
 let g:loaded_tree = 1
 
-" Preserve external compatibility options, then enable full vim compatibility
 let s:save_cpo = &cpo
 set cpo&vim
+"}}}
 
 
-command! -nargs=* -complete=dir Tree call tree#show('enew', <q-args>)
-command! -nargs=* -complete=dir VTree call tree#show('vnew', <q-args>)
-command! -nargs=* -complete=dir STree call tree#show('new', <q-args>)
-command! -nargs=* -complete=dir PTree call tree#show('project', <q-args>)
+command! -nargs=* -complete=dir -bang Tree call tree#show(<bang>0 ? 'enew' : '<mods> new', <q-args>)
+command! -nargs=* -complete=dir       PTree call tree#show('project', <q-args>)
 
-if get(g:, 'tree_mappings', 1)
-  nnoremap -+ :Tree<cr>
-  nnoremap -V :VTree<cr>
-  nnoremap -S :STree<cr>
-  nnoremap -P :PTree<cr>
-endif
+nnoremap <Plug>(Tree-Here)    :<c-u>Tree! <C-r>=v:count?'-L '.v:count:''<cr><cr>
+nnoremap <Plug>(Tree-Vsplit)  :<c-u>vert Tree <C-r>=v:count?'-L '.v:count:''<cr><cr>
+nnoremap <Plug>(Tree-Split)   :<c-u>Tree <C-r>=v:count?'-L '.v:count:''<cr><cr>
+nnoremap <Plug>(Tree-Project) :<c-u>PTree <C-r>=v:count?'-L '.v:count:''<cr><cr>
 
 
 "------------------------------------------------------------------------------
@@ -63,16 +54,23 @@ fun! tree#show(cmd, args) abort
     return
   endif
 
-  " ensure dirname has no trailing slash
-  if args.dir[-1:] =~ '[\/]'
-    let args.dir = args.dir[:-2]
+  let is_explorer = index(['netrw', 'dirvish'], &ft) >= 0
+  let is_project = a:cmd == 'project'
+
+  if is_project
+    let was_open = s:is_tree_project_open()
+    call s:close_tree_project()
+    if was_open
+      return
+    endif
   endif
 
   " running the command from a Tree buffer, reuse it
   if exists('b:Tree')
     %d _
     call extend(b:Tree, args)
-    return b:Tree.fill()
+    call b:Tree.fill()
+    return
   endif
 
   " store alt file if calling Tree from an unlisted buffer
@@ -82,8 +80,6 @@ fun! tree#show(cmd, args) abort
     let altfile = 0
   endif
 
-  let is_explorer = index(['netrw', 'dirvish'], &ft) >= 0
-  let is_project = a:cmd == 'project'
   exe 'silent' (is_project ? 'aboveleft vnew | 50wincmd |' :  a:cmd)
   setlocal buftype=nofile noswapfile nobuflisted ft=treeview
   if is_explorer
@@ -117,20 +113,39 @@ let s:Tree = {'dirs_only': 0, 'hidden': 0, 'current': '.', 'has_preview': 0}
 
 fun! s:Tree.fill() abort
   " Fill buffer with command output.
-  exe "r! tree -F " b:Tree.options . ' ' . shellescape(b:Tree.dir)
+  exe 'r! tree' self.all_args()
 
   " set statusline
   let name = getline('.')
   keepjumps normal! k"_2ddgg"_dd
-  let bufname = '[Tree] -F ' . b:Tree.options . ' ' . s:fnameescape(b:Tree.dir)
-  exe 'silent! keepalt file' bufname
-  call setline('.', substitute(getline('.'), '^'.getcwd(), '.', ''))
-  call setline('.', substitute(getline('.'), '^'.$HOME, '~', ''))
+  exe 'silent! keepalt file [Tree] ' . b:Tree.all_args()
+  call setline('.', substitute(getline('.'), '^\V'.escape(getcwd(), '\'), '.', ''))
+  call setline('.', substitute(getline('.'), '^\V'.escape($HOME, '\'), '~', ''))
   let &l:statusline = "%#WildMenu# ".name
-  setlocal noma
   call self.syntax()
   call self.cleanup()
+  if has('win32')
+    silent! %s/|--/├──/
+    silent! %s/`--/╰──/
+    silent! %s/^|/│/
+  endif
+  setlocal noma
   redraw!
+endfun
+
+
+fun! s:Tree.switches()
+  " Switches managed by the plugin (-F, -L, -d, -a).
+  let sw = ['-F', '-L', self.depth]
+  let sw += self.hidden ? ['-a'] : []
+  let sw += self.dirs_only ? ['-d'] : []
+  return join(sw)
+endfun
+
+
+fun! s:Tree.all_args()
+  " All arguments, including managed switches, user switches and path.
+  return printf('%s %s', self.switches(), self.args)
 endfun
 
 
@@ -140,7 +155,7 @@ fun! s:Tree.syntax() abort
   if !get(g:, 'tree_syntax_highlighting', 1)
     return
   endif
-  if b:Tree.options =~ 'd'
+  if b:Tree.dirs_only
     syn match TreeDirectory '\%>1l[[:alnum:]]\+'
   else
     syn match TreeDirectory '[[:alnum:]]\+.*/$' contains=TreeClassify,TreeLink
@@ -148,10 +163,12 @@ fun! s:Tree.syntax() abort
   syn match TreeExecutable '[[:alnum:]]\+.*\*$' contains=TreeClassify,TreeLink
   syn match TreeClassify    '[/*=>|]$' contained
   syn match TreeLink       '\->.*'
-  hi! link TreeDirectory Directory
-  hi! link TreeExecutable Title
-  hi! link TreeClassify Function
-  hi! link TreeLink Special
+  syn match TreeRoot       '\%1l.*'
+  hi def link TreeRoot Special
+  hi def link TreeDirectory Directory
+  hi def link TreeExecutable Title
+  hi def link TreeClassify Function
+  hi def link TreeLink Special
 endfun
 
 
@@ -284,62 +301,40 @@ fun! s:Tree.quit() abort
 endfun
 
 
-fun! s:Tree.toggle_option(opt, ...) abort
-  " Toggle Tree command parameter.
-  let pat  = ' \-'.a:opt.' '
-
-  if b:Tree.options =~ pat
-    let b:Tree.options = substitute(b:Tree.options, pat, '', '')
-    let state = '-'
-  elseif b:Tree.options =~ a:opt
-    let b:Tree.options = substitute(b:Tree.options, a:opt, '', '')
-    let state = '-'
-  else
-    let b:Tree.options .= ' -'.a:opt.' '
-    let state = '+'
-  endif
-
+fun! s:Tree.toggle_hidden() abort
+  " Toggle visibility of hidden elements.
+  let self.hidden = !self.hidden
   call self.refresh()
-  if a:0
-    echo '[Tree]' state a:1
-  endif
+  let state = self.hidden ? 'enabled' : 'disabled'
+  echo '[tree] visibility of hidden files' state
 endfun
 
 
-fun! s:Tree.depth(change)
+fun! s:Tree.toggle_files() abort
+  " Toggle visibility of regular files.
+  let self.dirs_only = !self.dirs_only
+  call self.refresh()
+  let state = self.dirs_only ? 'disabled' : 'enabled'
+  echo '[Tree] visibility of regular files' state
+endfun
+
+
+fun! s:Tree.change_depth(change)
   " Set the tree depth (-L option).
-  if match(self.options, 'L \d\+') >= 0
-    let depth = str2nr(matchstr(self.options, 'L \zs\d\+'))
-  else
-    let depth = get(g:, 'tree_default_depth', 2)
-  endif
-
-  " apply change
-  let depth = max([1, depth + a:change])
-
-  " remove the old depth
-  if match(self.options, '\s*\-L \d\+') >= 0
-    let self.options = substitute(self.options, '\s*\-L \d\+', '', 'g')
-  else
-    let self.options = substitute(self.options, 'L \d\+', '', 'g')
-  endif
-
-  " apply the new depth, if non-zero
-  if depth
-    let space = self.options =~ ' $' ? ' ' : ''
-    let self.options .= space . '-L ' . depth
-  endif
+  let self.depth = max([1, self.depth + a:change])
   call self.refresh()
 endfun
 
 
 fun! s:Tree.refresh()
   " Refresh Tree buffer.
+  set lz
   let pos = getcurpos()
   setlocal ma
   %d _
   call self.fill()
   silent! call cursor(pos[1:2])
+  set nolz
 endfun
 
 
@@ -396,7 +391,87 @@ endfun
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 let s:char_under_cursor = { -> matchstr(getline('.'), '\%' . col('.') . 'c.') }
+let s:tree_winvar = { w -> getbufvar(winbufnr(w), 'Tree', v:null) }
 let s:item_pat = has('win32') ? '\w' : '.*─ \zs.'
+
+
+fun! s:parse_args(args) abort
+  " Return parsed arguments, or an empty dict if invalid.
+  if a:args == ''
+    return s:default_opts()
+  endif
+
+  " ensure one leading and ending space
+  let args = ' ' . a:args . ' '
+
+  " find depth
+  let depth = matchstr(args, ' -L \d\+ ')
+  if depth == ''
+    let depth = 2
+  else
+    let depth = str2nr(matchstr(depth, '\d\+'))
+  endif
+
+  " find other switches
+  let dirs_only = args =~ ' -d '
+  let hidden = args =~ ' -a '
+
+  " remove managed switches
+  let args = substitute(args, '\C -[LFad] \d\?', ' ', 'g')
+
+  " find directory by removing all other switches
+  let dir = trim(substitute(args, ' -\a ', ' ', 'g'))
+
+  " remove quotes and escaped spaces
+  if dir[0] =~ '["'']'
+    let dir = dir[1:-2]
+  else
+    let dir = substitute(dir, '\ ', ' ', 'g')
+  endif
+
+  let dir = expand(dir)
+
+  " ensure directory exists, remove trailing slash
+  if dir !~ '\S'
+    let dir = '.'
+  elseif !isdirectory(dir)
+    return {}
+  elseif dir[-1:] =~ '[\/]'
+    let dir = dir[:-2]
+  endif
+
+  return {'args': args, 'dir': dir, 'depth': depth,
+        \ 'hidden': hidden, 'dirs_only': dirs_only}
+endfun
+
+
+fun! s:is_tree_project_open()
+  " Check if Tree is open in project-drawer mode.
+  for w in range(1, winnr('$'))
+    let tree = s:tree_winvar(w)
+    if tree isnot v:null
+      return tree.is_project
+    endif
+  endfor
+  return v:false
+endfun
+
+
+fun! s:close_tree_project()
+  " Close project-drawer window and return to previous one.
+  let cur = bufnr()
+  for w in range(1, winnr('$'))
+    if s:tree_winvar(w) isnot v:null
+      exe w . 'wincmd q'
+    endif
+  endfor
+  for w in range(1, winnr('$'))
+    if winbufnr(w) == cur
+      exe w . 'wincmd w'
+      return
+    endif
+  endfor
+endfun
 
 
 fun! s:maps() abort
@@ -427,11 +502,11 @@ fun! s:maps() abort
   nnoremap <silent><buffer><nowait> d       :call b:Tree.action_on_line(1, '')<cr>
   nnoremap         <buffer><nowait> .       :! <C-r>=b:Tree.item_in_quotes()<cr><Home><Right>
   nnoremap         <buffer><nowait> y       :let @" = <C-r>=b:Tree.item_in_quotes()<cr><cr>:echo 'Item copied to @"'<cr>
-  nnoremap <silent><buffer><nowait> gh      :call b:Tree.toggle_option('a', 'hidden elements')<cr>
-  nnoremap <silent><buffer><nowait> gd      :call b:Tree.toggle_option('d', 'directories only')<cr>
+  nnoremap <silent><buffer><nowait> gh      :call b:Tree.toggle_hidden()<cr>
+  nnoremap <silent><buffer><nowait> gd      :call b:Tree.toggle_files()<cr>
   nnoremap <silent><buffer><nowait> gr      :call b:Tree.refresh()<cr>
-  nnoremap <silent><buffer><nowait> g+      :<c-u>call b:Tree.depth(v:count1)<cr>
-  nnoremap <silent><buffer><nowait> g-      :<c-u>call b:Tree.depth(v:count1 * -1)<cr>
+  nnoremap <silent><buffer><nowait> g+      :<c-u>call b:Tree.change_depth(v:count1)<cr>
+  nnoremap <silent><buffer><nowait> g-      :<c-u>call b:Tree.change_depth(v:count1 * -1)<cr>
 endfun
 
 
@@ -471,70 +546,11 @@ endfun
 
 
 fun! s:default_opts()
-  " Default command switches.
-  let depth = get(g:, 'tree_default_depth', 2)
-  let depth = depth ? '-L ' . depth : ''
-  return get(g:, 'tree_default_options', depth)
-endfun
-
-
-fun! s:parse_args(args) abort
-  " Return parsed arguments, or an empty dict if invalid.
-  if a:args == ''
-    return {'options': s:default_opts(), 'dir': '.'}
-  endif
-
-  " remove leading spaces if any
-  let args = substitute(a:args, '^\s*', '', '')
-
-  " path is double quoted
-  if matchstr(args, '\(["'']\).*\1') != ''
-    let dir = expand(matchstr(args, '\(["'']\).*\1')[1:-2])
-    let opts = substitute(args, '\(["'']\).*\1', '', 'g')
-    if empty(opts)
-      let opts = s:default_opts()
-    endif
-    return isdirectory(dir) ? {'options': opts, 'dir': dir} : {}
-  endif
-
-  " no switches
-  if args !~ '^\-\| \-'
-    return isdirectory(args) ? {'options': s:default_opts(), 'dir': args} : {}
-  endif
-
-  let opts = split(args)
-  let dir = '.'
-  let attempt = ''
-
-  " switches come last
-  if opts[0] !~ '^\-'
-    while opts[0] !~ '^\-'
-      let attempt .= remove(opts, 0)
-      " remove trailing slash and spaces
-      let attempt = substitute(expand(attempt), '\s*/\?$', '', '')
-      if isdirectory(attempt)
-        let dir = attempt
-        break
-      endif
-    endwhile
-    return isdirectory(dir) ? {'options': join(opts), 'dir': dir} : {}
-  endif
-
-  let opts = split(args)
-  let dir = '.'
-  let attempt = ''
-
-  " unescaped path, or no path
-  while len(opts)
-    let attempt = remove(opts, -1) . ' ' . attempt
-    " remove trailing slash and spaces
-    let attempt = substitute(expand(attempt), '\s*/\?$', '', '')
-    if isdirectory(attempt)
-      let dir = attempt
-      break
-    endif
-  endwhile
-  return isdirectory(dir) ? {'options': join(opts), 'dir': dir} : {}
+  " Default command arguments.
+  return {'args': '', 'dir': '.',
+        \ 'depth': get(g:, 'tree_default_depth', 2),
+        \ 'hidden': v:false,
+        \ 'dirs_only': v:false}
 endfun
 
 
@@ -582,8 +598,9 @@ fun! s:fnameescape(item) abort
 endfun
 
 
-" Restore previous external compatibility options
+" Restore previous external compatibility options {{{
 let &cpo = s:save_cpo
 unlet s:save_cpo
+"}}}
 
-" vim: et sw=2 ts=2 sts=2 fdm=indent fdn=1 tags=tags
+" vim: et sw=2 ts=2 sts=2 fdm=expr tags=tags
