@@ -115,7 +115,7 @@ fun! s:add_or_delete_mark(delete, mark) abort
       return
     elseif mark !~ '[A-Za-z]'
       " let vim handle the others
-      exe (a:delete ? 'delmarks ' : 'mark ') . mark
+      exe (a:delete ? 'delmarks ' : 'normal! m') . mark
       return
     endif
   endif
