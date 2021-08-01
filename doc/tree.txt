@@ -72,8 +72,9 @@ PROJECT DRAWER MODE                                        *tree-project-mode*
   the same window as usual, will open it in the next window, then the cursor
   will be brought back to the |tree| window.
 
-  Running the `:PTree` command will close any open `Tree` buffer. If it was
-  not a |PTree| buffer, it will be opened again in project-drawer mode.
+  Running the `:PTree` command will close any open `Tree` buffer. If there was
+  not an open |PTree| buffer, it will be opened. Otherwise, the `PTree` buffer
+  will be toggled.
 
 
 

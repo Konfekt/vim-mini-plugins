@@ -54,7 +54,6 @@ fun! tree#show(cmd, args) abort
     return
   endif
 
-  let is_explorer = index(['netrw', 'dirvish'], &ft) >= 0
   let is_project = a:cmd == 'project'
 
   if is_project
@@ -73,26 +72,23 @@ fun! tree#show(cmd, args) abort
     return
   endif
 
-  " store alt file if calling Tree from an unlisted buffer
-  if !buflisted(bufnr('')) && buflisted(bufnr('#'))
-    let altfile = bufnr('#')
-  else
-    let altfile = 0
-  endif
+  let curfile = buflisted(bufnr(''))  ? bufnr('') : 0
+  let altfile = buflisted(bufnr('#')) ? bufnr('#') : 0
 
-  exe 'silent' (is_project ? 'aboveleft vnew | 50wincmd |' :  a:cmd)
-  setlocal buftype=nofile noswapfile nobuflisted ft=treeview
-  if is_explorer
-    setlocal bufhidden=wipe
-  else
-    setlocal bufhidden=hide
-  endif
+  exe 'silent' (is_project ? 'topleft vnew | 50wincmd |' :  a:cmd)
+  setlocal buftype=nofile noswapfile nobuflisted ft=treeview bufhidden=wipe
+
+  " increment id, it will be decremented if the Tree buffer is deleted
+  autocmd BufUnload <buffer> let s:id -= 1
+  let s:id += 1
 
   let b:Tree = copy(s:Tree)
   call extend(b:Tree, args)
+  let b:Tree.id = s:id
   let b:Tree.cmd = a:cmd
   let b:Tree.history = copy(s:History)
   let b:Tree.history.dirs = [b:Tree.dir]
+  let b:Tree.curfile = curfile
   let b:Tree.altfile = altfile
   let b:Tree.is_project = is_project
 
@@ -118,12 +114,12 @@ fun! s:Tree.fill() abort
   " set statusline
   let name = getline('.')
   keepjumps normal! k"_2ddgg"_dd
-  exe 'silent! keepalt file [Tree] ' . b:Tree.all_args()
   call setline('.', substitute(getline('.'), '^\V'.escape(getcwd(), '\'), '.', ''))
   call setline('.', substitute(getline('.'), '^\V'.escape($HOME, '\'), '~', ''))
   let &l:statusline = "%#WildMenu# ".name
+  call self.setbufname()
   call self.syntax()
-  call self.cleanup()
+  call self.close_preview()
   if has('win32')
     silent! %s/|--/├──/
     silent! %s/`--/╰──/
@@ -145,7 +141,7 @@ endfun
 
 fun! s:Tree.all_args()
   " All arguments, including managed switches, user switches and path.
-  return printf('%s %s', self.switches(), self.args)
+  return trim(printf('%s %s', self.switches(), self.args))
 endfun
 
 
@@ -216,11 +212,11 @@ fun! s:Tree.open(cmd, item)
   " Open a directory or file.
   if self.is_project && a:cmd == 'edit' && len(tabpagebuflist()) > 1
     wincmd l
-    exe 'edit' s:fnameescape(a:item)
+    call s:open_file('edit', a:item, self.curfile, self.altfile)
     wincmd p
     call search(s:item_pat, 'W', line('.'))
   else
-    exe a:cmd s:fnameescape(a:item)
+    exe s:open_file(a:cmd, a:item, self.curfile, self.altfile)
   endif
 endfun
 
@@ -283,21 +279,26 @@ endfun
 
 
 fun! s:Tree.quit() abort
-  " Close the Tree buffer.
-  let altfile = b:Tree.altfile
+  " Close the Tree buffer or the preview window.
+  if self.close_preview()
+    return
+  endif
 
-  if self.cmd == 'enew' && (buflisted(bufnr('#')) || altfile)
-    buffer #
-  elseif self.cmd == 'enew'
-    " there could be no other buffers
-    try | bnext | catch | quit | endtry
+  if self.cmd == 'enew'
+    if self.curfile
+      exe 'buffer' self.curfile
+      if self.altfile
+        let @# = bufname(self.altfile)
+      endif
+    elseif self.altfile
+      exe 'buffer' self.altfile
+    else
+      " there could be no other buffers
+      try | bnext | catch | quit | endtry
+    endif
   else
     quit
   endif
-  if altfile && bufexists(altfile)
-    let @# = bufname(altfile)
-  endif
-  call self.cleanup()
 endfun
 
 
@@ -338,16 +339,24 @@ fun! s:Tree.refresh()
 endfun
 
 
-fun! s:Tree.cleanup() abort
-  " Clean up previous Tree buffers.
-  for bn in range(1, bufnr('$'))
-    if !buflisted(bn) && bn != bufnr('') && bufname(bn) =~ '\V\^[Tree] -F'
-      exe bn.'bw'
-    endif
-  endfor
+fun! s:Tree.setbufname()
+  " Set Tree buffer name.
+  let name = 'Tree ' . self.all_args()
+  if self.id > 1
+    let name = self.id . ': ' . name
+  endif
+  exe 'silent! keepalt file' fnameescape(name)
+endfun
+
+
+fun! s:Tree.close_preview() abort
+  " Close preview window, return true if there was one.
   if self.has_preview
     silent! pclose
+    let self.has_preview = v:false
+    return v:true
   endif
+  return v:false
 endfun
 
 
@@ -390,6 +399,7 @@ endfun
 " Helpers
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+let s:id = 0
 let s:char_under_cursor = { -> matchstr(getline('.'), '\%' . col('.') . 'c.') }
 let s:tree_winvar = { w -> getbufvar(winbufnr(w), 'Tree', v:null) }
 let s:item_pat = has('win32') ? '\w' : '.*─ \zs.'
@@ -440,7 +450,7 @@ fun! s:parse_args(args) abort
     let dir = dir[:-2]
   endif
 
-  return {'args': args, 'dir': dir, 'depth': depth,
+  return {'args': trim(args), 'dir': dir, 'depth': depth,
         \ 'hidden': hidden, 'dirs_only': dirs_only}
 endfun
 
@@ -457,14 +467,22 @@ fun! s:is_tree_project_open()
 endfun
 
 
+fun! s:close_tree_buffers()
+  " Close all open Tree buffers.
+  for w in range(1, winnr('$'))
+    let tree = s:tree_winvar(w)
+    if tree isnot v:null
+      exe w . 'wincmd w'
+      call tree.quit()
+    endif
+  endfor
+endfun
+
+
 fun! s:close_tree_project()
   " Close project-drawer window and return to previous one.
   let cur = bufnr()
-  for w in range(1, winnr('$'))
-    if s:tree_winvar(w) isnot v:null
-      exe w . 'wincmd q'
-    endif
-  endfor
+  call s:close_tree_buffers()
   for w in range(1, winnr('$'))
     if winbufnr(w) == cur
       exe w . 'wincmd w'
@@ -595,6 +613,17 @@ endfun
 fun! s:fnameescape(item) abort
   " Escape directory name and remove trailing slashes.
   return substitute(fnameescape(a:item), '/$', '', '')
+endfun
+
+
+fun! s:open_file(cmd, name, alt1, alt2)
+  " Open a file and set the alternate buffer.
+  exe a:cmd s:fnameescape(a:name)
+  if a:alt1
+    let @# = bufname(a:alt1)
+  elseif a:alt2
+    let @# = bufname(a:alt2)
+  endif
 endfun
 
 
