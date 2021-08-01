@@ -565,7 +565,8 @@ endfun
 
 fun! s:default_opts()
   " Default command arguments.
-  return {'args': '', 'dir': '.',
+  return {'args': get(g:, 'tree_default_options', ''),
+        \ 'dir': '.',
         \ 'depth': get(g:, 'tree_default_depth', 2),
         \ 'hidden': v:false,
         \ 'dirs_only': v:false}

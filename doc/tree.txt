@@ -84,13 +84,12 @@ SETTINGS                                                       *tree-settings*
 
   Default: ''                                         *g:tree_default_options*
 
-    The switches to be passed to the `tree` command by default.
+    The options/switches to be passed to the `tree` command by default.
 
 
   Default: 2                                            *g:tree_default_depth*
 
-    This option is the same of the `-L` switch of the `tree` command.
-    It is ignored if the previous option is not empty.
+    Sets the `-L` switch of the `tree` command.
 
 
   Default: 1                                      *g:tree_syntax_highlighting*
