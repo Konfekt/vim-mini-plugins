@@ -23,12 +23,12 @@ set cpo&vim
 "}}}
 
 
-command! -nargs=* -complete=dir -bang Tree call tree#show(<bang>0 ? 'enew' : '<mods> new', <q-args>)
-command! -nargs=* -complete=dir       PTree call tree#show('project', <q-args>)
+command! -nargs=* -complete=dir Tree  call tree#show('<mods>' == '' ? 'enew' : '<mods> new', <q-args>)
+command! -nargs=* -complete=dir PTree call tree#show('project', <q-args>)
 
-nnoremap <Plug>(Tree-Here)    :<c-u>Tree! <C-r>=v:count?'-L '.v:count:''<cr><cr>
+nnoremap <Plug>(Tree)         :<c-u>Tree <C-r>=v:count?'-L '.v:count:''<cr><cr>
 nnoremap <Plug>(Tree-Vsplit)  :<c-u>vert Tree <C-r>=v:count?'-L '.v:count:''<cr><cr>
-nnoremap <Plug>(Tree-Split)   :<c-u>Tree <C-r>=v:count?'-L '.v:count:''<cr><cr>
+nnoremap <Plug>(Tree-Split)   :<c-u>bel Tree <C-r>=v:count?'-L '.v:count:''<cr><cr>
 nnoremap <Plug>(Tree-Project) :<c-u>PTree <C-r>=v:count?'-L '.v:count:''<cr><cr>
 
 

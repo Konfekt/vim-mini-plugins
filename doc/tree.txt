@@ -26,9 +26,9 @@ COMMANDS                                                       *tree-commands*
                                                               *:Tree* *:PTree*
   <mods> Tree[!] [args]~
 
-  `:Tree`         start in an horizontal split
-  `:Tree!`        start in the current window
+  `:Tree`         start in the current window
   `:vert Tree`    start in a vertical split
+  `:bel Tree`     start in a split below current window
   `:tab Tree`     start in a new tab
   `:PTree`        start |tree-project-drawer|
 
@@ -41,14 +41,14 @@ COMMANDS                                                       *tree-commands*
 PLUGS                                                             *tree-plugs*
 ==============================================================================
 
-  <Plug>(Tree-Split)      same as `:Tree`
+  <Plug>(Tree)            same as `:Tree`
   <Plug>(Tree-Vsplit)     same as `:vert Tree`
-  <Plug>(Tree-Here)       same as `:Tree!`
+  <Plug>(Tree-Split)      same as `:bel Tree`
   <Plug>(Tree-Project)    same as `:PTree`
 
   Example mappings:
 >
-    nmap -+ <Plug>(Tree-Here)
+    nmap -+ <Plug>(Tree)
     nmap -V <Plug>(Tree-Vsplit)
     nmap -S <Plug>(Tree-Split)
     nmap -P <Plug>(Tree-Project)
