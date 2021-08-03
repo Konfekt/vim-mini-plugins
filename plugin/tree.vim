@@ -78,9 +78,11 @@ fun! tree#show(cmd, args) abort
   exe 'silent' (is_project ? 'topleft vnew | 50wincmd |' :  a:cmd)
   setlocal buftype=nofile noswapfile nobuflisted ft=treeview bufhidden=wipe
 
-  " increment id, it will be decremented if the Tree buffer is deleted
+  " id is used for conflicting Tree buffer names
   autocmd BufUnload <buffer> let s:id -= 1
   let s:id += 1
+
+  autocmd ShellCmdPost <buffer> call b:Tree.refresh()
 
   let b:Tree = copy(s:Tree)
   call extend(b:Tree, args)
@@ -109,9 +111,7 @@ let s:Tree = {'dirs_only': 0, 'hidden': 0, 'current': '.', 'has_preview': 0}
 
 fun! s:Tree.fill() abort
   " Fill buffer with command output.
-  exe 'r! tree' self.all_args()
-
-  " set statusline
+  exe 'r! tree' self.all_args() fnameescape(self.dir)
   let name = getline('.')
   keepjumps normal! k"_2ddgg"_dd
   call setline('.', substitute(getline('.'), '^\V'.escape(getcwd(), '\'), '.', ''))
@@ -126,6 +126,7 @@ fun! s:Tree.fill() abort
     silent! %s/^|/│/
   endif
   setlocal noma
+  1
   redraw!
 endfun
 
@@ -187,7 +188,7 @@ fun! s:Tree.action_on_line(with_tree, cmd) abort
     if isdirectory(item)
       let self.dir = item
       call self.history.add(self.dir)
-      call self.refresh()
+      call self.redraw()
     else
       " not possible to descend into a file...
       echo "[Tree] Not a directory"
@@ -253,7 +254,7 @@ fun! s:Tree.go_up()
   " Go to the parent directory.
   let self.dir = fnamemodify(self.dir, ':p:h:h')
   call self.history.add(self.dir)
-  call self.refresh()
+  call self.redraw()
 endfun
 
 
@@ -328,7 +329,7 @@ endfun
 
 
 fun! s:Tree.refresh()
-  " Refresh Tree buffer.
+  " Refresh the Tree buffer.
   set lz
   let pos = getcurpos()
   setlocal ma
@@ -339,9 +340,20 @@ fun! s:Tree.refresh()
 endfun
 
 
+fun! s:Tree.redraw()
+  " Redraw the Tree buffer.
+  set lz
+  setlocal ma
+  %d _
+  call self.fill()
+  set nolz
+endfun
+
+
 fun! s:Tree.setbufname()
   " Set Tree buffer name.
-  let name = 'Tree ' . self.all_args()
+  let dir = self.dir == '.' ? '.' : fnamemodify(self.dir, ':~:.')
+  let name = 'Tree ' . self.all_args() . ' ' . dir
   if self.id > 1
     let name = self.id . ': ' . name
   endif
@@ -387,8 +399,7 @@ fun! s:History.go(back) abort
     echo "Limit reached"
   else
     let b:Tree.dir = self.dirs[self.index]
-    call b:Tree.refresh()
-    redraw
+    call b:Tree.redraw()
     echo "History:" (self.index+1) . '/' . (max+1)
   endif
 endfun
@@ -431,20 +442,19 @@ fun! s:parse_args(args) abort
 
   " find directory by removing all other switches
   let dir = trim(substitute(args, ' -\a ', ' ', 'g'))
+  let args = substitute(args, '\V' . escape(dir, '\'), '', '')
 
   " remove quotes and escaped spaces
-  if dir[0] =~ '["'']'
+  if dir =~ '^".*"$' || dir =~ "'^.*$'"
     let dir = dir[1:-2]
   else
     let dir = substitute(dir, '\ ', ' ', 'g')
   endif
 
-  let dir = expand(dir)
+  let dir = dir !~ '\S' ? '.' : fnamemodify(expand(dir), ':p')
 
   " ensure directory exists, remove trailing slash
-  if dir !~ '\S'
-    let dir = '.'
-  elseif !isdirectory(dir)
+  if !isdirectory(dir)
     return {}
   elseif dir[-1:] =~ '[\/]'
     let dir = dir[:-2]
