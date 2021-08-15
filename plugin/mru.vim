@@ -226,7 +226,7 @@ function! s:mru_fzf(fullscreen)
    " ensure file exists
    call filter(mru, 'filereadable(expand(v:val)) || isdirectory(expand(v:val))')
 
-   if exists('g:loaded_finder') " use Finder
+   if exists('*FileFinder') " use Finder
       call FileFinder(mru, 'Recent files')
 
    elseif exists('*fzf#complete') " use the fzf.vim plugin
