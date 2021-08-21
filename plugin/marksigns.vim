@@ -307,7 +307,7 @@ fun! s:higroup() abort
   let mode = gui ? 'gui' : 'cterm'
   let hi   = synIDattr(synIDtrans(hlID('SignColumn')), 'bg', mode)
   let color = empty(hi) || hi == -1 ? mode.'bg=NONE' : mode.'bg='.hi
-  exe 'silent! hi! MarkBar guifg=Red ctermfg=9' color
+  exe 'silent! hi default MarkBar guifg=#ff0000 ctermfg=9' color
 endfun "}}}
 
 fun! s:start_timer() abort
