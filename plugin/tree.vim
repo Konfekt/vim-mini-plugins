@@ -181,7 +181,7 @@ fun! s:Tree.action_on_line(with_tree, cmd) abort
     return
   endif
 
-  let item = s:item_at_line()
+  let item = self.item_at_line()
 
   "add to history and descend into directory with Tree
   if a:with_tree
@@ -243,10 +243,48 @@ fun! s:Tree.preview(item)
 endfun
 
 
+fun! s:Tree.item_at_line(...) abort
+  " Get full path of directory/file under cursor (or at line a:1).
+  let line = a:0 ? a:1 : line('.')
+  if line == 1
+    return fnamemodify(getline('.'), ':p')
+  endif
+
+  " get item and its column
+  let icol = match(getline(line), '\w')
+  let item = getline(line)[icol:]
+
+  " go up, and when an item at a lower level is found, it's a parent
+  " in this case update the item name, prepending the parent's name
+  while line > 2
+    let line -= 1
+    let L = getline(line)
+    if match(L, '\w') < icol
+      let icol = match(L, '\w')
+      let item = L[icol:] . '/' . item
+    endif
+  endwhile
+
+  " handle symlinks
+  if item =~ ' \-> '
+    let item = matchstr(item, '.*\ze \->')
+  endif
+
+  " double slashes could be present with -F option
+  let item = substitute(item, '//', '/', 'g')
+
+  " remove classification markers
+  let item = substitute(item, '[/*]$', '', '')
+
+  " prepend the base dir to the found item
+  return b:Tree.dir . '/' . item
+endfun
+
+
 fun! s:Tree.item_in_quotes() abort
   " Item at line, in quotes.
-  return has('win32') ? '"' . s:item_at_line() . '"'
-        \             : '"' . escape(s:item_at_line(), '"') . '"'
+  return has('win32') ? '"' . self.item_at_line() . '"'
+        \             : '"' . escape(self.item_at_line(), '"') . '"'
 endfun
 
 
@@ -270,7 +308,7 @@ fun! s:Tree.move(cnt, up, move_by_root, type) abort
     if a:move_by_root && virtcol('.') > 5
       continue
     endif
-    let item = s:item_at_line()
+    let item = self.item_at_line()
     if (!skip_dirs && isdirectory(item)) || (!skip_files && filereadable(item))
       return
     endif
@@ -369,6 +407,20 @@ fun! s:Tree.close_preview() abort
     return v:true
   endif
   return v:false
+endfun
+
+
+fun! s:Tree.line_info() abort
+  let f = self.item_at_line()
+  if isdirectory(f)
+    let s = systemlist('ls -ldh ' . f)[0]
+  else
+    let s = systemlist('ls -lh ' . f)[0]
+  endif
+  echohl Special
+  echo s[:9]
+  echohl None
+  echon s[10:]
 endfun
 
 
@@ -526,6 +578,7 @@ fun! s:maps() abort
   nnoremap <silent><buffer><nowait> <F2>    :call b:Tree.history.go(1)<cr>
   nnoremap <silent><buffer><nowait> <F3>    :call b:Tree.history.go(0)<cr>
 
+  nnoremap         <buffer><nowait> <C-j>   :<C-u>call b:Tree.line_info()<CR>
   nnoremap <silent><buffer><nowait> -       :call b:Tree.go_up()<cr>
   nnoremap <silent><buffer><nowait> d       :call b:Tree.action_on_line(1, '')<cr>
   nnoremap         <buffer><nowait> .       :! <C-r>=b:Tree.item_in_quotes()<cr><Home><Right>
@@ -559,6 +612,7 @@ fun! s:help()
   echo "v         open directory/file in a vertical split"
   echo "t         open directory/file in a new tab"
   echo ".         populate command line with path"
+  echo "<C-j>     ls -l {item at line}"
   echo "y         copy path to register \""
   echo "gd        toggle -d switch (directories only)"
   echo "gh        toggle -h switch (hidden elements)"
@@ -580,44 +634,6 @@ fun! s:default_opts()
         \ 'depth': get(g:, 'tree_default_depth', 2),
         \ 'hidden': v:false,
         \ 'dirs_only': v:false}
-endfun
-
-
-fun! s:item_at_line(...) abort
-  " Get full path of directory/file under cursor (or at line a:1).
-  let line = a:0 ? a:1 : line('.')
-  if line == 1
-    return fnamemodify(getline('.'), ':p')
-  endif
-
-  " get item and its column
-  let icol = match(getline(line), '\w')
-  let item = getline(line)[icol:]
-
-  " go up, and when an item at a lower level is found, it's a parent
-  " in this case update the item name, prepending the parent's name
-  while line > 2
-    let line -= 1
-    let L = getline(line)
-    if match(L, '\w') < icol
-      let icol = match(L, '\w')
-      let item = L[icol:] . '/' . item
-    endif
-  endwhile
-
-  " handle symlinks
-  if item =~ ' \-> '
-    let item = matchstr(item, '.*\ze \->')
-  endif
-
-  " double slashes could be present with -F option
-  let item = substitute(item, '//', '/', 'g')
-
-  " remove classification markers
-  let item = substitute(item, '[/*]$', '', '')
-
-  " prepend the base dir to the found item
-  return b:Tree.dir . '/' . item
 endfun
 
 
