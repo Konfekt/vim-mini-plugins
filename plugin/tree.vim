@@ -251,8 +251,8 @@ fun! s:Tree.item_at_line(...) abort
   endif
 
   " get item and its column
-  let icol = match(getline(line), '\w')
-  let item = getline(line)[icol:]
+  let icol = match(getline(line), s:item_pat)
+  let item = matchstr(getline(line), s:item_pat)
 
   " go up, and when an item at a lower level is found, it's a parent
   " in this case update the item name, prepending the parent's name
@@ -260,7 +260,7 @@ fun! s:Tree.item_at_line(...) abort
     let line -= 1
     let L = getline(line)
     if match(L, '\w') < icol
-      let icol = match(L, '\w')
+      let icol = match(L, s:item_pat)
       let item = L[icol:] . '/' . item
     endif
   endwhile
@@ -465,7 +465,7 @@ endfun
 let s:id = 0
 let s:char_under_cursor = { -> matchstr(getline('.'), '\%' . col('.') . 'c.') }
 let s:tree_winvar = { w -> getbufvar(winbufnr(w), 'Tree', v:null) }
-let s:item_pat = has('win32') ? '\w' : '.*─ \zs.'
+let s:item_pat = '.*─ \zs.*'
 
 
 fun! s:parse_args(args) abort
