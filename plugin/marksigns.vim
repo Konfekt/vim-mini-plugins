@@ -124,6 +124,7 @@ fun! s:add_or_delete_mark(delete, mark) abort
   else
     call b:mark_signs.add_mark(mark)
   endif
+  silent doautocmd <nomodeline> User MarkChanged
 endfun "}}}
 
 fun! s:list_marks(arg) abort
