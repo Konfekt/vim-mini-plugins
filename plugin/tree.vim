@@ -581,13 +581,14 @@ fun! s:maps() abort
   nnoremap         <buffer><nowait> <C-j>   :<C-u>call b:Tree.line_info()<CR>
   nnoremap <silent><buffer><nowait> -       :call b:Tree.go_up()<cr>
   nnoremap <silent><buffer><nowait> d       :call b:Tree.action_on_line(1, '')<cr>
+  nnoremap <silent><buffer><nowait> i       :call b:Tree.action_on_line(1, '')<cr>
   nnoremap         <buffer><nowait> .       :! <C-r>=b:Tree.item_in_quotes()<cr><Home><Right>
   nnoremap         <buffer><nowait> y       :let @" = <C-r>=b:Tree.item_in_quotes()<cr><cr>:echo 'Item copied to @"'<cr>
   nnoremap <silent><buffer><nowait> gh      :call b:Tree.toggle_hidden()<cr>
   nnoremap <silent><buffer><nowait> gd      :call b:Tree.toggle_files()<cr>
   nnoremap <silent><buffer><nowait> gr      :call b:Tree.refresh()<cr>
-  nnoremap <silent><buffer><nowait> g+      :<c-u>call b:Tree.change_depth(v:count1)<cr>
-  nnoremap <silent><buffer><nowait> g-      :<c-u>call b:Tree.change_depth(v:count1 * -1)<cr>
+  nnoremap <silent><buffer><nowait> ]       :<c-u>call b:Tree.change_depth(v:count1)<cr>
+  nnoremap <silent><buffer><nowait> [       :<c-u>call b:Tree.change_depth(v:count1 * -1)<cr>
 endfun
 
 
@@ -605,7 +606,7 @@ fun! s:help()
   echo "l         move to next file"
   echo "L         move to next directory"
   echo "-         go to parent directory"
-  echo "d         descend into directory"
+  echo "d/i       descend into directory"
   echo "o/<CR>    open directory/file"
   echo "p         preview file"
   echo "s         open directory/file in a horizontal split"
@@ -617,8 +618,8 @@ fun! s:help()
   echo "gd        toggle -d switch (directories only)"
   echo "gh        toggle -h switch (hidden elements)"
   echo "gr        refresh"
-  echo "g+        increase depth (-L switch)"
-  echo "g-        decrease depth ,,"
+  echo "]         increase depth (-L switch)"
+  echo "[         decrease depth ,,"
   echo "<F1>      this help"
   echo "<F2>      history backward"
   echo "<F3>      history forward"
