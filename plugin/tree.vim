@@ -370,10 +370,27 @@ fun! s:Tree.refresh()
   " Refresh the Tree buffer.
   set lz
   let pos = getcurpos()
+  let item = fnamemodify(self.item_at_line(), ':p')
   setlocal ma
   %d _
   call self.fill()
-  silent! call cursor(pos[1:2])
+  if line('$') < 500
+    let found = v:false
+    for l in range(1, line('$'))
+      if fnamemodify(self.item_at_line(l), ':p') == item
+        exe l
+        let found = v:true
+        call search('─\s\+\zs\S')
+        normal! zz
+        break
+      endif
+      if !found
+        silent! call cursor(pos[1:2])
+      endif
+    endfor
+  else
+    silent! call cursor(pos[1:2])
+  endif
   set nolz
 endfun
 
