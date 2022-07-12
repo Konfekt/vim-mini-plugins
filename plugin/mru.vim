@@ -214,9 +214,7 @@ function! s:mru_fzf(fullscreen)
    endif
 
    " Load the MRU file list
-   if empty(s:mru)
-      let s:mru = s:load_list()
-   endif
+   let s:mru = s:load_list()
 
    " integrate bookmarks and files from viminfo
    let mru = copy(s:mru)
