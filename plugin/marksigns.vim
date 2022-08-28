@@ -25,16 +25,13 @@
 "------------------------------------------------------------------------------
 
 " GUARD {{{1
-if !has('signs') || !has('timers')
-  finish
-endif
-
-if exists('g:loaded_marksigns')
+if !has('signs') || !has('timers') || exists('g:loaded_marksigns')
   finish
 endif
 let g:loaded_marksigns = 1
 
 let s:enabled = get(g:, 'marksigns_enable_at_start', 1)
+let s:write_shada = 0
 
 
 " Preserve external compatibility options, then enable full vim compatibility
@@ -48,6 +45,7 @@ augroup marksigns
   au BufEnter *                let s:ready = 1 | call s:update_buffer(0)
   au SessionLoadPost *         call s:update_buffer(0)
   au ColorScheme *             call s:higroup()
+  au VimLeave *                call s:wshada()
 augroup END
 
 command! -bang -nargs=? Mark      call s:add_or_delete_mark(<bang>0, <q-args>)
@@ -164,7 +162,9 @@ fun! s:update_all_windows() abort
   let curwin = winnr()
   for w in range(winnr('$'))
     noautocmd exe (w+1).'wincmd w'
-    call b:mark_signs.update_all()
+    if exists('b:mark_signs')
+      call b:mark_signs.update_all()
+    endif
   endfor
   exe curwin . 'wincmd w'
 endfun "}}}
@@ -280,6 +280,7 @@ fun! s:Signs.delete_mark(mark) abort
     else
       call self.remove_sign(a:mark)
     endif
+    let s:write_shada = has('nvim')
   else
     call s:warn('Mark '.a:mark.' not defined')
   endif
@@ -325,6 +326,13 @@ fun! s:start_timer() abort
   if !s:ready | return | endif
   let s:ready = 0
   call timer_start(500, { t -> s:update_buffer(0) })
+endfun "}}}
+
+fun! s:wshada() abort
+  " Write nvim shada file, so that marks are updated. {{{1
+  if s:write_shada
+    silent! wshada!
+  endif
 endfun "}}}
 
 "------------------------------------------------------------------------------
