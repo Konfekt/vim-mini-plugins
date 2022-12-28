@@ -53,11 +53,11 @@ fun! s:open_url(url)
   " Open an url in the default browser
   "
   if has('win16') || has('win32') || has('win64')
-    silent! call system('start cmd /cstart /b '.a:url)
+    silent! call system('start cmd /cstart /b ' . a:url . ' &')
   elseif has('mac') || has('macunix') || has('gui_macvim')
-    silent! call system('open "'.a:url.'"')
+    silent! call system('open "' . a:url . '" &')
   else
-    silent! call system('xdg-open '.a:url)
+    silent! call system('xdg-open ' . a:url . ' &')
   endif
   redraw!
 endfun
