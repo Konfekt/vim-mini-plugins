@@ -187,7 +187,7 @@ endfunction
 
 function! s:load_oldfiles(mru)
    if !exists('s:oldfiles')
-      let s:oldfiles = map(copy(v:oldfiles), 'fnamemodify(expand(v:val), ":p")')
+      let s:oldfiles = map(copy(v:oldfiles), 'fnamemodify(v:val, ":p")')
    endif
    return filter(s:oldfiles, 'index(a:mru, v:val) < 0')
 endfunction
@@ -222,7 +222,7 @@ function! s:mru_fzf(fullscreen)
    let mru += s:load_oldfiles(mru)
 
    " ensure file exists
-   call filter(mru, 'filereadable(expand(v:val)) || isdirectory(expand(v:val))')
+   call filter(mru, 'filereadable(v:val) || isdirectory(v:val)')
 
    if exists('*FileFinder') " use Finder
       call FileFinder(mru, 'Recent files')
